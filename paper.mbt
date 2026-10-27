@@ -227,17 +227,23 @@ pub fn assemble(
       }
     }
   }
-  let request = if bp.per_level.length() > 0 {
-    let parts : Array[String] = []
-    for entry in bp.per_level {
-      let (level, count) = entry
-      parts.push("L\{level}×\{count}")
+  let ordered = sort_by_level(picked)
+  // Describe what the paper actually turned out to be, not what was asked for:
+  // diversity caps can soften a quota, and the sheet should say so.
+  let parts : Array[String] = []
+  for level in 1..<=5 {
+    let mut n = 0
+    for it in ordered {
+      if it.level == level {
+        n = n + 1
+      }
     }
-    join_with(parts, " ")
-  } else {
-    "\{bp.total} 题"
+    if n > 0 {
+      parts.push("L\{level}×\{n}")
+    }
   }
-  Ok({ schema_name, items: sort_by_level(picked), seed: bp.seed, request, })
+  let request = join_with(parts, " ")
+  Ok({ schema_name, items: ordered, seed: bp.seed, request, })
 }
 
 ///|
