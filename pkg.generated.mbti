@@ -20,7 +20,15 @@ pub fn join_lines(Array[String]) -> String
 
 pub fn load_schema(String) -> Result[Schema, String]
 
+pub fn paper_from_json_string(String) -> Result[PaperFile, String]
+
+pub fn paper_to_json(Paper, String) -> Json
+
+pub fn paper_to_json_string(Paper, String) -> String
+
 pub fn parse_int_opt(String) -> Int32?
+
+pub fn parse_rat(String) -> Rat?
 
 pub fn quick_paper(String, Int32, Int32) -> Result[Paper, String]
 
@@ -51,6 +59,10 @@ pub fn split_on(String, Char) -> Array[String]
 pub fn tokenize(String) -> Array[Token]
 
 pub fn trim(String) -> String
+
+pub fn verify_item_file(ItemFile) -> Verdict
+
+pub fn verify_paper_file(PaperFile) -> VerifyReport
 
 pub fn verify_quadratic(Poly, Array[Rat]) -> (Verdict, Certificate)
 
@@ -111,6 +123,7 @@ pub enum Family {
   FQuadratic
   FRational
 }
+pub fn Family::from_string(String) -> Self?
 pub fn Family::to_string(Self) -> String
 
 pub(all) struct Item {
@@ -130,6 +143,15 @@ pub fn Item::answer_text(Self) -> String
 pub fn Item::level_label(Self) -> String
 pub fn Item::reasons_text(Self) -> String
 
+pub(all) struct ItemFile {
+  question : String
+  answers : Array[Rat]
+  level : Int32
+  fingerprint : String
+  family : Family
+  payload : Array[Rat]
+}
+
 pub(all) struct Paper {
   schema_name : String
   items : Array[Item]
@@ -138,6 +160,14 @@ pub(all) struct Paper {
 }
 pub fn Paper::size(Self) -> Int32
 pub fn Paper::tag_counts(Self) -> Map[String, Int32]
+
+pub(all) struct PaperFile {
+  format : String
+  schema_name : String
+  title : String
+  seed : Int32
+  items : Array[ItemFile]
+}
 
 pub struct Poly {
   coeffs : Array[Rat]
@@ -251,6 +281,13 @@ pub enum Verdict {
 }
 pub fn Verdict::is_well_posed(Self) -> Bool
 pub fn Verdict::to_string(Self) -> String
+
+pub(all) struct VerifyReport {
+  total : Int32
+  passed : Int32
+  failures : Array[String]
+}
+pub fn VerifyReport::all_passed(Self) -> Bool
 
 // Type aliases
 

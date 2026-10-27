@@ -45,6 +45,29 @@ jobs:
           moon fmt
           git diff --exit-code
 
+  cross-language:
+    name: independent verifier (python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - run: moon update
+      - name: Generate two papers
+        run: |
+          moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln --count 8 --seed 3 --out /tmp/q
+          moon run cmd/cli --target js -- gen --schema examples/rational.kiln --count 8 --seed 3 --out /tmp/r
+      - name: Re-check them without MoonBit
+        run: |
+          python3 tools/verify_reference.py /tmp/q/paper.json
+          python3 tools/verify_reference.py /tmp/r/paper.json
+      - name: The MoonBit verifier agrees
+        run: |
+          moon run cmd/cli --target js -- verify --file /tmp/q/paper.json
+          moon run cmd/cli --target js -- verify --file /tmp/r/paper.json
+
   native:
     name: test (native)
     runs-on: ubuntu-latest

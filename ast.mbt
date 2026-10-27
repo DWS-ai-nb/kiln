@@ -170,6 +170,15 @@ pub fn Require::check(self : Require, env : Map[String, Rat]) -> Bool? {
 }
 
 ///|
+pub fn Family::from_string(s : String) -> Family? {
+  match s {
+    "quadratic" => Some(FQuadratic)
+    "rational" => Some(FRational)
+    _ => None
+  }
+}
+
+///|
 pub fn Family::to_string(self : Family) -> String {
   match self {
     FQuadratic => "quadratic"

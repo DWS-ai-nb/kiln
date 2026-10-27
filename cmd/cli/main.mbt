@@ -15,6 +15,7 @@ fn usage() -> Unit {
   println("  kiln gen   --schema <file> [options]")
   println("  kiln check --schema <file> [--verbose]")
   println("  kiln pool  --schema <file> [--limit N] [--show N]")
+  println("  kiln verify --file <paper.json>")
   println("  kiln help | --version")
   println("")
   println("gen 选项：")
@@ -365,13 +366,16 @@ fn cmd_gen(argv : Array[String]) -> Unit {
   let ws = @kiln.render_worksheet(paper, title)
   let key = @kiln.render_answer_key(paper, title)
   let md = @kiln.render_markdown(paper, title)
+  let paper_json = @kiln.paper_to_json_string(paper, title)
   let f1 = save("\{out}/worksheet.html", ws)
   let f2 = save("\{out}/answers.html", key)
   let f3 = save("\{out}/worksheet.md", md)
+  let f4 = save("\{out}/paper.json", paper_json)
   println("")
   println("\{if f1 { "ok  " } else { "fail" }} \{out}/worksheet.html")
   println("\{if f2 { "ok  " } else { "fail" }} \{out}/answers.html")
   println("\{if f3 { "ok  " } else { "fail" }} \{out}/worksheet.md")
+  println("\{if f4 { "ok  " } else { "fail" }} \{out}/paper.json")
   match record_path {
     Some(p) => {
       let used : Array[String] = []
@@ -395,6 +399,54 @@ fn cmd_gen(argv : Array[String]) -> Unit {
 }
 
 ///|
+/// Independent verification of a paper file.
+///
+/// Note what this does *not* do: it never reads the schema and never re-runs the
+/// generator. It only takes each item's payload and answers, and re-derives the
+/// answer from scratch. If someone hands you a paper and a forged answer key,
+/// this is the command that catches it.
+fn cmd_verify(argv : Array[String]) -> Unit {
+  let path = match flag(argv, "--file") {
+    Some(p) => p
+    None => {
+      println("缺少 --file")
+      usage()
+      abort("kiln verify: 未指定文件")
+    }
+  }
+  let text = @fs.read_file_to_string(path) catch {
+    _ => {
+      println("无法读取：\{path}")
+      abort("kiln verify: 无法读取文件")
+    }
+  }
+  let pf = match @kiln.paper_from_json_string(text) {
+    Ok(p) => p
+    Err(e) => {
+      println("格式错误：\{e}")
+      abort("kiln verify: 文件格式不合法")
+    }
+  }
+  let report = @kiln.verify_paper_file(pf)
+  println("format      \{pf.format}")
+  println("schema      \{pf.schema_name}")
+  println("title       \{pf.title}")
+  println("seed        \{pf.seed}")
+  println("items       \{report.total}")
+  println("passed      \{report.passed}")
+  println("failed      \{report.failures.length()}")
+  for f in report.failures {
+    println("  " + f)
+  }
+  if !report.all_passed() {
+    abort(
+      "kiln verify: \{report.failures.length()} 道题未通过独立复核",
+    )
+  }
+  println("结果        全部题目可由凭证独立复核")
+}
+
+///|
 /// Find the verb anywhere in `argv`.
 ///
 /// The wasm runner passes only the user arguments, while the JS runner passes
@@ -404,7 +456,7 @@ fn find_cmd(argv : Array[String]) -> String {
   let mut i = 0
   while i < argv.length() {
     let a = argv[i]
-    if a == "gen" || a == "check" || a == "pool" || a == "help" {
+    if a == "gen" || a == "check" || a == "pool" || a == "verify" || a == "help" {
       return a
     }
     i = i + 1
@@ -432,6 +484,8 @@ fn main {
     cmd_check(argv)
   } else if cmd == "pool" {
     cmd_pool(argv)
+  } else if cmd == "verify" {
+    cmd_verify(argv)
   } else {
     usage()
   }

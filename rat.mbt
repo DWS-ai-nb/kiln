@@ -276,3 +276,46 @@ test "integer_sqrt only answers on perfect squares" {
   debug_inspect(rat_int(50L).integer_sqrt(), content="None")
   debug_inspect(rat(1L, 4L).integer_sqrt(), content="None")
 }
+
+///|
+/// Parse `p/q` or a bare integer. Used when reading a paper file back, where
+/// every number must round-trip exactly — which is why the wire format uses
+/// strings instead of JSON numbers.
+pub fn parse_rat(s : String) -> Rat? {
+  let text = trim(s)
+  let parts = split_on(text, '/')
+  if parts.length() == 1 {
+    match parse_int_opt(parts[0]) {
+      Some(n) => Some(rat_int(n.to_int64()))
+      None => None
+    }
+  } else if parts.length() == 2 {
+    match (parse_int_opt(parts[0]), parse_int_opt(parts[1])) {
+      (Some(n), Some(d)) =>
+        if d == 0 {
+          None
+        } else {
+          Some(rat(n.to_int64(), d.to_int64()))
+        }
+      _ => None
+    }
+  } else {
+    None
+  }
+}
+
+///|
+test "parse_rat round-trips the wire format" {
+  fn show(x : Rat?) -> String {
+    match x {
+      Some(r) => r.to_string()
+      None => "none"
+    }
+  }
+  inspect(show(parse_rat("-3")), content="-3")
+  inspect(show(parse_rat("1/2")), content="1/2")
+  inspect(show(parse_rat("  7 ")), content="7")
+  inspect(show(parse_rat("1/0")), content="none")
+  inspect(show(parse_rat("abc")), content="none")
+  inspect(rat(-4L, -8L).to_string(), content="1/2")
+}

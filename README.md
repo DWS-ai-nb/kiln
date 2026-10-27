@@ -110,6 +110,9 @@ moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
 moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
   --levels 1:2,2:3,3:3,4:2 --seed 2026 --out out
 
+# 复核一份卷子：不读 schema，不重跑生成器，只凭证重算
+moon run cmd/cli --target js -- verify --file out/paper.json
+
 # 跨周复用：这周发的题，下周不再出现
 moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
   --count 8 --seed 22 --out out --exclude out/ledger.txt --record out/ledger.txt
@@ -122,6 +125,7 @@ moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
 - `out/worksheet.html` — 学生卷，题序按难度递增
 - `out/answers.html` — 答案页，含难度依据与复核凭证
 - `out/worksheet.md` — 便于粘贴的纯文本版
+- `out/paper.json` — 卷子文件，每道题带可复核凭证
 
 仓库里带三个示例 schema：
 
@@ -136,6 +140,31 @@ moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
 ```
 组卷失败：L5 需要 30 题，可用的只有 12 题（缺口 18，可能受结构多样性上限限制）
 ```
+
+---
+
+## 任何人都能复核
+
+这是整个项目最想被检验的一点：**卷子不是一堆文本，是一份可复核的数据**。
+
+`paper.json` 里每道题带一段 `payload`——二次方程是 `[a, b, c]`，分式方程是 `[n₀, n₁, d₀, d₁, q]`。拿它和答案，任何人都能把答案从头算一遍：
+
+```bash
+$ python3 tools/verify_reference.py out/paper.json
+schema=quadratic_int_roots items=4 passed=4 failed=0
+```
+
+这个 Python 实现 112 行有效代码，用 `fractions.Fraction` 全程精确，跟 MoonBit 那份**不共享任何代码**。CI 每次生成后都会跑它——两边结论不一致，构建就失败。
+
+改了答案会怎样：
+
+```bash
+$ python3 tools/verify_reference.py tampered.json
+1: answer-mismatch: formula gives [Fraction(-4, 1), Fraction(0, 1)], declared [Fraction(99, 1)]
+schema=quadratic_int_roots items=4 passed=3 failed=1        # 退出码 1
+```
+
+格式规范在 [`docs/CERTIFICATE.md`](docs/CERTIFICATE.md)，包含每种族的 payload 定义、逐步算法，以及它**不**保证什么（题干文字不参与校验——凭证管数学，不管文风）。
 
 ---
 
@@ -173,6 +202,8 @@ schema 是声明式的，不做计算，只描述「题族长什么样」：
 | `canon`（在 `poly.mbt`） | 结构指纹 | 同解规范化 |
 | `paper.mbt` | 组卷 | 难度配额 + 结构多样性 + 已选集合 + 不可行解释 |
 | `render.mbt` | 输出 | HTML / Markdown，全部转义 |
+| `paper_io.mbt` | 卷子文件 | `kiln.paper/1` 的读写与独立校验 |
+| `tools/verify_reference.py` | 参考校验器 | 112 行 Python，与实现零共享 |
 | `rng.mbt` | 确定性随机 | splitmix64，20 行，不依赖平台熵 |
 | `cmd/cli` | 命令行 | 三个动词，无配置文件；账本读写在 CLI 层 |
 | `golden_wbtest.mbt` | 跨后端黄金测试 | 把整卷输出钉死，两个后端同时校验 |
@@ -230,7 +261,7 @@ schema.kiln ──parse──> Schema ──enumerate──> 候选参数组
 
 ## 测试
 
-60 个测试，`moon test` 全绿；`moon test --target wasm-gc` 与 `--target js` 各跑一遍，同一个黄金文本必须同时通过。
+65 个测试，`moon test` 全绿；`moon test --target wasm-gc` 与 `--target js` 各跑一遍，同一个黄金文本必须同时通过。
 
 - **精确算术**：符号归一、约分、比较、精确开方（含非完全平方必须返回 `None`）
 - **多项式**：展开、求值、同解规范化（缩放合并、不同方程不误合并、有理系数清分母）
@@ -279,8 +310,9 @@ rejects     1 distinct reason(s)
 - [x] HTML / Markdown 输出、CLI
 - [x] 第二个验证族：分式方程（增根检测）
 - [x] 跨周去重账本（`--exclude` / `--record`）
+- [x] `kiln.paper/1` 卷子格式 + `verify` 命令 + Python 参考实现
 - [x] CI：双后端测试、`--deny-warn`、格式检查
-- [ ] 平行卷：A/B 卷按细目表做等价匹配
+- [ ] 平行卷：A/B 卷按结构指纹做统计等价匹配
 - [ ] 题池 JSON 导入导出，便于与既有题库对接
 
 ---
