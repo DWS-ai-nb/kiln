@@ -289,10 +289,11 @@ fn cmd_check(argv : Array[String]) -> Unit {
     }
   }
   if bad > 0 {
-    println("结果        存在未通过复核的题目")
-  } else {
-    println("结果        全部通过独立复核")
+    // CI depends on a non-zero exit here: a verifier that always exits 0 is a
+    // verifier nobody can gate on.
+    abort("kiln check: \{bad} 道题未通过独立复核")
   }
+  println("结果        全部通过独立复核")
 }
 
 ///|

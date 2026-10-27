@@ -1,0 +1,8 @@
+# Normalize line endings so a Windows checkout and a Linux CI runner produce
+# byte-identical sources. Without this, every file shows as modified on the
+# first clone from a different platform.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.wasm binary
