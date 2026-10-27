@@ -88,7 +88,6 @@ fn build_form(
   pool : Pool,
   slots : Array[Slot],
   schema_name : String,
-  request : String,
   seed : Int32,
 ) -> Result[Paper, String] {
   let taken : Map[String, Bool] = Map([])
@@ -118,7 +117,21 @@ fn build_form(
       "\{relaxed} 道题只能按难度等价、无法按结构标签精确匹配，请放宽 schema 的 domain 后重试",
     )
   }
-  Ok({ schema_name, items, seed, request: request + "（平行卷）", })
+  // Describe the form by its actual difficulty spread, exactly like assemble.
+  let parts : Array[String] = []
+  for level in 1..<=5 {
+    let mut n = 0
+    for it in items {
+      if it.level == level {
+        n = n + 1
+      }
+    }
+    if n > 0 {
+      parts.push("L\{level}×\{n}")
+    }
+  }
+  let request = join_with(parts, " ") + "（平行卷）"
+  Ok({ schema_name, items, seed, request, })
 }
 
 ///|
@@ -142,7 +155,7 @@ pub fn parallel_form(
   for it in paper.items {
     slots.push({ level: it.level, tags: it.tags, fingerprint: it.fingerprint, })
   }
-  build_form(pool, slots, paper.schema_name, paper.request, seed)
+  build_form(pool, slots, paper.schema_name, seed)
 }
 
 ///|
@@ -157,7 +170,7 @@ pub fn parallel_paper_file(
   for it in pf.items {
     slots.push({ level: it.level, tags: it.tags, fingerprint: it.fingerprint, })
   }
-  build_form(pool, slots, pf.schema_name, "平行卷", seed)
+  build_form(pool, slots, pf.schema_name, seed)
 }
 
 ///|
