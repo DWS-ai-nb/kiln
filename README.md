@@ -205,7 +205,7 @@ schema 是声明式的，不做计算，只描述「题族长什么样」：
 | `paper_io.mbt` | 卷子文件 | `kiln.paper/1` 的读写与独立校验 |
 | `tools/verify_reference.py` | 参考校验器 | 112 行 Python，与实现零共享 |
 | `rng.mbt` | 确定性随机 | splitmix64，20 行，不依赖平台熵 |
-| `cmd/cli` | 命令行 | 三个动词，无配置文件；账本读写在 CLI 层 |
+| `cmd/cli` | 命令行 | 四个动词，无配置文件；账本读写在 CLI 层 |
 | `golden_wbtest.mbt` | 跨后端黄金测试 | 把整卷输出钉死，两个后端同时校验 |
 | `properties_test.mbt` | 属性测试 | 验证器一致性、指纹缩放不变、指纹幂等 |
 
