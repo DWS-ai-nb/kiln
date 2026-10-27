@@ -127,8 +127,8 @@ pub fn build_rational(
   if !verdict.is_well_posed() {
     return Err(verdict.to_string())
   }
-  let filled_num = num.to_string("x")
-  let filled_den = den.to_string("x")
+  let filled_num = as_factor(num)
+  let filled_den = as_factor(den)
   let question = replace_all(
     replace_all(
       replace_all(schema.ask, "{num}", filled_num),
@@ -160,6 +160,25 @@ pub fn build_rational(
     family: FRational,
     tags: rational_tags(r, k),
   })
+}
+
+///|
+/// Wrap a polynomial in parentheses only when it has more than one term, so a
+/// denominator of `x` renders as `x` rather than `(x)`.
+fn as_factor(p : Poly) -> String {
+  let s = p.to_string("x")
+  let cs = s.to_array()
+  let mut has_operator = false
+  for i in 1..<cs.length() {
+    if cs[i] == '+' || cs[i] == '-' {
+      has_operator = true
+    }
+  }
+  if has_operator {
+    "(\{s})"
+  } else {
+    s
+  }
 }
 
 ///|
@@ -248,7 +267,7 @@ const RATIONAL_SCHEMA : String =
   #|require {
   #|  r != k
   #|}
-  #|ask "解方程 ({num})/({den}) = {q}"
+  #|ask "解方程 {num}/{den} = {q}"
   #|
 
 ///|

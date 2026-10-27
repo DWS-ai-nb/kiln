@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # wasm-gc and js are the two backends the golden parity tests pin.
+        # native needs a C toolchain and is run separately below.
+        target: [wasm-gc, js]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Show toolchain
+        run: moon version --all
+
+      - name: Update package index
+        run: moon update
+
+      - name: Check (all targets, warnings are errors)
+        run: moon check --target all --deny-warn
+
+      - name: Test on ${{ matrix.target }}
+        run: moon test --target ${{ matrix.target }}
+
+      - name: Formatting is canonical
+        run: |
+          moon fmt
+          git diff --exit-code
+
+  native:
+    name: test (native)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - run: moon update
+      - name: Test on native
+        run: moon test --target native

@@ -21,4 +21,4 @@ param {
   p: q * (r - k) - r
 }
 
-ask "解方程 ({num})/({den}) = {q}"
+ask "解方程 {num}/{den} = {q}"

@@ -109,7 +109,13 @@ moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
 # 按难度配额组卷
 moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
   --levels 1:2,2:3,3:3,4:2 --seed 2026 --out out
+
+# 跨周复用：这周发的题，下周不再出现
+moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
+  --count 8 --seed 22 --out out --exclude out/ledger.txt --record out/ledger.txt
 ```
+
+账本是一行一个结构指纹的纯文本文件，可以进版本库、可以 diff，也可以手工删掉某几行把某道题放回题池。
 
 产物三份，都是自包含的 HTML（无 CDN、无外链字体、无 JS 依赖，直接打印）：
 
@@ -168,7 +174,9 @@ schema 是声明式的，不做计算，只描述「题族长什么样」：
 | `paper.mbt` | 组卷 | 难度配额 + 结构多样性 + 已选集合 + 不可行解释 |
 | `render.mbt` | 输出 | HTML / Markdown，全部转义 |
 | `rng.mbt` | 确定性随机 | splitmix64，20 行，不依赖平台熵 |
-| `cmd/cli` | 命令行 | 三个动词，无配置文件 |
+| `cmd/cli` | 命令行 | 三个动词，无配置文件；账本读写在 CLI 层 |
+| `golden_wbtest.mbt` | 跨后端黄金测试 | 把整卷输出钉死，两个后端同时校验 |
+| `properties_test.mbt` | 属性测试 | 验证器一致性、指纹缩放不变、指纹幂等 |
 
 数据流：
 
@@ -191,6 +199,15 @@ schema.kiln ──parse──> Schema ──enumerate──> 候选参数组
 
 ---
 
+## 工程实践
+
+- CI 在 **wasm-gc 与 js 两个后端分别跑测试**，同时做 `moon check --target all --deny-warn` 和 `moon fmt` 的 diff 检查。警告即错误，格式必须是规范形式。
+- **属性测试**用标准库 `@quickcheck`，失败时给的是收缩后的最小反例，不是一坨随机输入。
+- **黄金文本**把整卷输出钉死。任何引入浮点、哈希迭代序或本地化差异的改动，会在两个后端之一先露出来。
+- native 后端单独一个 job 且 `continue-on-error`：它需要 C 工具链，不该因为环境缺失就把主流程标红，但也不假装它一定通过。
+
+---
+
 ## 设计取舍
 
 **不重造轮子，但也不当胶水。** 生态里已有的 CAS、排版引擎、通用约束求解器一律不碰。kiln 的独有部分是「逆向构造 + 适定性判定 + 凭证 + 指纹」这条链，它不属于上面任何一类。
@@ -207,7 +224,7 @@ schema.kiln ──parse──> Schema ──enumerate──> 候选参数组
 
 ## 测试
 
-55 个测试，`moon test` 全绿：
+60 个测试，`moon test` 全绿；`moon test --target wasm-gc` 与 `--target js` 各跑一遍，同一个黄金文本必须同时通过。
 
 - **精确算术**：符号归一、约分、比较、精确开方（含非完全平方必须返回 `None`）
 - **多项式**：展开、求值、同解规范化（缩放合并、不同方程不误合并、有理系数清分母）
@@ -215,6 +232,8 @@ schema.kiln ──parse──> Schema ──enumerate──> 候选参数组
 - **验证器**：正例、错答案、负判别式、重根、无理根——五种判定各自有独立用例
 - **引擎**：题池规模与去重计数、全量复检、可复现性
 - **组卷**：配额、种子可复现、不可行解释、排除集、**同卷不得重题**（回归用例）、退化结构不得霸屏（跨 12 个种子扫描）
+- **属性测试**（`@quickcheck`，带收缩）：任取两个相异整数根构造的方程必被验证器接受；任意非零缩放下结构指纹不变；指纹可反向重建出同一方程
+- **跨后端黄金文本**：固定 seed 的整卷输出逐字符写死，两个后端都必须一字不差——这是 README 里「逐字节一致」那句话的证明，不是修辞
 
 几何测试（跨种子扫描、全池复检）比单点断言更能兜住回归——上面那条「同卷重题」的 bug 就是被跨种子扫描抓出来的。
 
@@ -253,6 +272,8 @@ rejects     1 distinct reason(s)
 - [x] 组卷（难度配额、结构多样性、不可行解释）
 - [x] HTML / Markdown 输出、CLI
 - [x] 第二个验证族：分式方程（增根检测）
+- [x] 跨周去重账本（`--exclude` / `--record`）
+- [x] CI：双后端测试、`--deny-warn`、格式检查
 - [ ] 平行卷：A/B 卷按细目表做等价匹配
 - [ ] 题池 JSON 导入导出，便于与既有题库对接
 

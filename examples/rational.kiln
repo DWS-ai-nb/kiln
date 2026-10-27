@@ -23,4 +23,4 @@ require {
   r != k
 }
 
-ask "解方程 ({num})/({den}) = {q}"
+ask "解方程 {num}/{den} = {q}"
