@@ -96,6 +96,12 @@ Hadamard 的适定性三条件在这里落成三条可执行检查：
 ## 快速开始
 
 ```bash
+git clone https://github.com/DWS-ai-nb/kiln
+cd kiln
+moon update
+```
+
+```bash
 # 构建（Windows 上没有 MSVC 时用 js 后端）
 moon build --target js
 

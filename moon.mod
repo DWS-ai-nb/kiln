@@ -15,7 +15,7 @@ version = "0.1.0"
 
 readme = "README.md"
 
-repository = ""
+repository = "https://github.com/DWS-ai-nb/kiln"
 
 license = "Apache-2.0"
 
