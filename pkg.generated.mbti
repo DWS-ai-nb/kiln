@@ -1,0 +1,247 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "shier/kiln"
+
+// Values
+pub fn assemble(Pool, String, Blueprint) -> Result[Paper, String]
+
+pub fn build_quadratic(Schema, Map[String, Rat]) -> Result[Item, String]
+
+pub fn classify_quadratic(Rat, Rat, Array[Rat]) -> (Int32, Array[String])
+
+pub fn escape_html(String) -> String
+
+pub fn generate(Schema, Int32) -> Pool
+
+pub fn join_lines(Array[String]) -> String
+
+pub fn load_schema(String) -> Result[Schema, String]
+
+pub fn parse_int_opt(String) -> Int32?
+
+pub fn quick_paper(String, Int32, Int32) -> Result[Paper, String]
+
+pub fn quick_paper_with(String, Array[(Int32, Int32)], Int32) -> Result[Paper, String]
+
+pub fn rat(Int64, Int64) -> Rat
+
+pub fn rat_int(Int64) -> Rat
+
+pub fn rat_one() -> Rat
+
+pub fn rat_zero() -> Rat
+
+pub fn render_answer_key(Paper, String) -> String
+
+pub fn render_markdown(Paper, String) -> String
+
+pub fn render_worksheet(Paper, String) -> String
+
+pub fn replace_all(String, String, String) -> String
+
+pub fn[T] shuffle(Rng, Array[T]) -> Unit
+
+pub fn split_on(String, Char) -> Array[String]
+
+pub fn tokenize(String) -> Array[Token]
+
+pub fn trim(String) -> String
+
+pub fn verify_quadratic(Poly, Array[Rat]) -> (Verdict, Certificate)
+
+// Errors
+pub suberror SchemaError {
+  SchemaError(String)
+}
+
+// Types and methods
+pub(all) struct Blueprint {
+  total : Int32
+  per_level : Array[(Int32, Int32)]
+  seed : Int32
+  exclude : Array[String]
+  max_per_tag : Int32
+}
+pub fn Blueprint::capping(Self, Int32) -> Self
+pub fn Blueprint::excluding(Self, Array[String]) -> Self
+pub fn Blueprint::new(Int32, Int32) -> Self
+pub fn Blueprint::with_levels(Array[(Int32, Int32)], Int32) -> Self
+
+pub(all) struct Certificate {
+  a : Rat
+  b : Rat
+  c : Rat
+  discriminant : Rat
+  sqrt_discriminant : Rat?
+  formula_roots : Array[Rat]
+  robust : Bool
+}
+pub fn Certificate::to_lines(Self) -> Array[String]
+
+pub enum CmpOp {
+  CLt
+  CLe
+  CGt
+  CGe
+  CEq
+  CNe
+}
+pub fn CmpOp::holds(Self, Rat, Rat) -> Bool
+pub fn CmpOp::to_string(Self) -> String
+
+pub enum Expr {
+  ELit(Rat)
+  EVar(String)
+  ENeg(Expr)
+  EAdd(Expr, Expr)
+  ESub(Expr, Expr)
+  EMul(Expr, Expr)
+  EDiv(Expr, Expr)
+  EPow(Expr, Int32)
+}
+pub fn Expr::eval(Self, Map[String, Rat]) -> Rat?
+pub fn Expr::to_string(Self) -> String
+pub fn Expr::vars(Self) -> Array[String]
+
+pub enum Family {
+  FQuadratic
+}
+pub fn Family::to_string(Self) -> String
+
+pub(all) struct Item {
+  schema_name : String
+  question : String
+  answers : Array[Rat]
+  level : Int32
+  reasons : Array[String]
+  fingerprint : String
+  certificate : Certificate
+  robust : Bool
+  signature : String
+  tags : Array[String]
+}
+pub fn Item::answer_text(Self) -> String
+pub fn Item::level_label(Self) -> String
+pub fn Item::reasons_text(Self) -> String
+
+pub(all) struct Paper {
+  schema_name : String
+  items : Array[Item]
+  seed : Int32
+  request : String
+}
+pub fn Paper::size(Self) -> Int32
+pub fn Paper::tag_counts(Self) -> Map[String, Int32]
+
+pub struct Poly {
+  coeffs : Array[Rat]
+}
+pub fn Poly::add(Self, Self) -> Self
+pub fn Poly::canonical_key(Self) -> String
+pub fn Poly::coeff(Self, Int32) -> Rat
+pub fn Poly::constant(Rat) -> Self
+pub fn Poly::degree(Self) -> Int32
+pub fn Poly::eval(Self, Rat) -> Rat
+pub fn Poly::is_zero(Self) -> Bool
+pub fn Poly::leading(Self) -> Rat
+pub fn Poly::mul(Self, Self) -> Self
+pub fn Poly::neg(Self) -> Self
+pub fn Poly::new(Array[Rat]) -> Self
+pub fn Poly::pow(Self, Int32) -> Self
+pub fn Poly::scale(Self, Rat) -> Self
+pub fn Poly::sub(Self, Self) -> Self
+pub fn Poly::to_string(Self, String) -> String
+pub fn Poly::x() -> Self
+pub fn Poly::zero() -> Self
+
+pub(all) struct Pool {
+  items : Array[Item]
+  attempted : Int32
+  rejected : Int32
+  duplicates : Int32
+  rejects : Array[String]
+}
+pub fn Pool::count_at(Self, Int32) -> Int32
+pub fn Pool::level_histogram(Self) -> String
+pub fn Pool::size(Self) -> Int32
+
+pub struct Rat {
+  num : Int64
+  den : Int64
+}
+pub fn Rat::abs(Self) -> Self
+pub fn Rat::add(Self, Self) -> Self
+pub fn Rat::compare(Self, Self) -> Int32
+pub fn Rat::den(Self) -> Int64
+pub fn Rat::div(Self, Self) -> Self
+pub fn Rat::equal(Self, Self) -> Bool
+pub fn Rat::integer_sqrt(Self) -> Int64?
+pub fn Rat::is_integer(Self) -> Bool
+pub fn Rat::is_negative(Self) -> Bool
+pub fn Rat::is_zero(Self) -> Bool
+pub fn Rat::mul(Self, Self) -> Self
+pub fn Rat::neg(Self) -> Self
+pub fn Rat::num(Self) -> Int64
+pub fn Rat::pow(Self, Int32) -> Self
+pub fn Rat::sign(Self) -> Int32
+pub fn Rat::sqrt_exact(Self) -> Self?
+pub fn Rat::sub(Self, Self) -> Self
+pub fn Rat::to_string(Self) -> String
+
+pub struct Require {
+  left : Expr
+  op : CmpOp
+  right : Expr
+}
+pub fn Require::check(Self, Map[String, Rat]) -> Bool?
+
+pub struct Rng {
+  mut state : UInt64
+}
+pub fn Rng::below(Self, Int32) -> Int32
+pub fn Rng::new(Int32) -> Self
+pub fn Rng::next_u64(Self) -> UInt64
+
+pub(all) struct Schema {
+  name : String
+  family : Family
+  title : String
+  answers : Array[VarDecl]
+  params : Array[VarDecl]
+  requires : Array[Require]
+  ask : String
+}
+
+pub enum Tok {
+  TIdent(String)
+  TNum(Int64)
+  TStr(String)
+  TPunct(String)
+  TBad(Char)
+  TEof
+}
+
+pub struct Token {
+  kind : Tok
+  line : Int32
+}
+
+pub struct VarDecl {
+  name : String
+  domain : (Int32, Int32)?
+  expr : Expr?
+}
+
+pub enum Verdict {
+  WellPosed
+  NotQuadratic
+  NoRealRoots
+  DoubleRoot
+  IrrationalRoots
+  AnswerMismatch(String)
+}
+pub fn Verdict::is_well_posed(Self) -> Bool
+pub fn Verdict::to_string(Self) -> String
+
+// Type aliases
+
+// Traits

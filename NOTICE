@@ -1,0 +1,32 @@
+kiln
+Copyright 2026 kiln contributors
+
+This product includes software and ideas developed by third parties.
+The implementation in this repository is original; the items below are
+acknowledged as prior art or as algorithmic inspiration.
+
+1. SplitMix64
+   Deterministic pseudo-random generator by Guy L. Steele Jr., Doug Lea,
+   Christine H. Flood (2014). Public-domain algorithm; reimplemented here
+   in about twenty lines in rng.mbt.
+
+2. Hadamard's well-posedness conditions
+   Existence, uniqueness and stability of solutions, as formulated by
+   Jacques Hadamard. Used as the conceptual basis of the three checks in
+   verify.mbt. No code is derived from any source.
+
+3. Vieta's formulas
+   Textbook mathematics; used in family_quadratic.mbt to derive
+   coefficients from a declared pair of roots.
+
+4. QuickCheck
+   Property-based testing with shrinking, originally by Koen Claessen and
+   John Hughes. Not reimplemented here: kiln uses MoonBit's standard
+   library (@quickcheck) where property tests are appropriate.
+
+Ecosystem neighbours that kiln deliberately does not reimplement:
+   moonbit-community/maxima, CAIMEOX/symbit  — computer algebra
+   moonbitlang/typst, moonbitlang/pagelayout — typesetting / layout
+   cn-xjr/moonplan, sgy1023-crt/cassowary    — constraint solving
+
+Runtime dependencies: moonbitlang/x (file IO only).
