@@ -139,7 +139,7 @@ moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
 |---|---|---|
 | `examples/quadratic.kiln` | quadratic | 整数根一元二次方程，171 道唯一题 |
 | `examples/rational.kiln` | rational | 分式方程，312 道唯一题 |
-| `examples/rational_with_extraneous.kiln` | rational | **反面教材**：故意不写 `r != k`，让验证器拦下 13 道增根题 |
+| `examples/rational_with_extraneous.kiln` | rational | **反面教材**：故意不写 `r != k`，让验证器拦下 26 道增根题 |
 
 出卷失败不会返回一张残卷，而是指名道姓地告诉你缺口：
 
@@ -297,11 +297,11 @@ schema.kiln ──parse──> Schema ──enumerate──> 候选参数组
 
 加第三个族只需要：一个 `build_*`、一个 `verify_*`、一组结构标签，以及一条 schema。引擎的枚举、去重、组卷、渲染全部复用——不需要改 `engine.mbt` 以外的任何调度代码。
 
-分式族是「适定性」最有说服力的证据。把它那条 `require r != k` 删掉，13 个候选会去分母解出根恰好等于分母零点——方程其实无解，属于典型增根。验证器全部拦下，reason 写作 `extraneous-root`：
+分式族是「适定性」最有说服力的证据。把它那条 `require r != k` 删掉，26 个候选会去分母解出根恰好等于分母零点——方程其实无解，属于典型增根。验证器全部拦下，reason 写作 `extraneous-root`：
 
 ```
 $ moon run cmd/cli --target js -- check --schema examples/rational_with_extraneous.kiln
-candidates  169  (rejected 13, duplicates 0)
+candidates  338  (rejected 26, duplicates 0)
 rejects     1 distinct reason(s)
             - extraneous-root
 ```
