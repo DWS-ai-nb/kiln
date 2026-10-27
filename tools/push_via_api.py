@@ -32,12 +32,13 @@ def git(*args: str) -> bytes:
     return subprocess.run(["git", *args], capture_output=True, check=True).stdout
 
 
-def get_token() -> str:
+def get_token(username: str) -> str:
     out = subprocess.run(
         ["git", "credential", "fill"],
-        input=b"protocol=https\nhost=github.com\n\n",
+        input=f"protocol=https\nhost=github.com\nusername={username}\n\n".encode(),
         capture_output=True,
         check=True,
+        timeout=20,
     ).stdout.decode()
     for line in out.splitlines():
         if line.startswith("password="):
@@ -45,7 +46,7 @@ def get_token() -> str:
     raise SystemExit("no credential available")
 
 
-TOKEN = get_token()
+TOKEN = get_token(sys.argv[1].split("/")[0])
 
 
 def api(method: str, path: str, body=None) -> dict:
@@ -143,6 +144,16 @@ def main() -> int:
     blob_cache = {}
     tree_cache = {}
 
+    # The Git Data API refuses to create objects in an empty repository, so seed
+    # a one-file initial commit first. It will be orphaned when we force the ref.
+    try:
+        api("PUT", f"/repos/{repo}/contents/README.md",
+            {"message": "init", "content": base64.b64encode(b"# kiln\n").decode(),
+             "branch": "main"})
+        print("seeded initial commit (un-emptied the repository)")
+    except Exception as e:  # noqa: BLE001
+        print("seed skipped:", e)
+
     history = commits(repo)
     print(f"replaying {len(history)} commits for {repo}")
 
@@ -178,8 +189,8 @@ def main() -> int:
         tip = got
         print(f"  [{i + 1}/{len(history)}] {c['sha'][:7]} {c['message'][:60]}")
 
-    # Create the branch at the tip.
-    api("POST", f"/repos/{repo}/git/refs", {"ref": "refs/heads/main", "sha": tip})
+    # Point main at the tip, replacing the seed commit.
+    api("PATCH", f"/repos/{repo}/git/refs/heads/main", {"sha": tip, "force": True})
     print(f"refs/heads/main -> {tip}")
     print(f"done: https://github.com/{repo}")
     return 0
