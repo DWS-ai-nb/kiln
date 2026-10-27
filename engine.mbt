@@ -11,6 +11,7 @@ pub(all) struct Item {
   certificate : Certificate
   robust : Bool
   signature : String
+  family : Family
   ///
   /// Structural tags used by the assembler to keep a paper diverse, e.g. two
   /// items in a row that both have a zero root.
@@ -57,6 +58,14 @@ pub fn Item::reasons_text(self : Item) -> String {
     }
     sb.to_string()
   }
+}
+
+///|
+/// Rebuild the object under test from a certificate payload. For the quadratic
+/// family the payload is `[a, b, c]` in that order.
+pub fn rebuild_quadratic(cert : Certificate) -> Poly {
+  let p = cert.payload
+  Poly::new([p[2], p[1], p[0]])
 }
 
 ///|
@@ -197,6 +206,7 @@ fn requirements_hold(
 fn make_item(schema : Schema, env : Map[String, Rat]) -> Result[Item, String] {
   match schema.family {
     FQuadratic => build_quadratic(schema, env)
+    FRational => build_rational(schema, env)
   }
 }
 
@@ -271,11 +281,7 @@ test "every generated item re-verifies independently" {
   let pool = generate(schema, 120)
   let mut bad = 0
   for item in pool.items {
-    let p = Poly::new([
-      item.certificate.c,
-      item.certificate.b,
-      item.certificate.a,
-    ])
+    let p = rebuild_quadratic(item.certificate)
     let (v, _) = verify_quadratic(p, item.answers)
     if !v.is_well_posed() {
       bad = bad + 1
@@ -315,11 +321,7 @@ test "scaled duplicates collapse into one item" {
   inspect(pool.attempted > 0, content="true")
   inspect(pool.duplicates > 0, content="true")
   // Every surviving item is the primitive representative of its class.
-  let p = Poly::new([
-    pool.items[0].certificate.c,
-    pool.items[0].certificate.b,
-    pool.items[0].certificate.a,
-  ])
+  let p = rebuild_quadratic(pool.items[0].certificate)
   inspect(p.leading().to_string(), content="1")
 }
 

@@ -135,7 +135,7 @@ pub fn render_answer_key(paper : Paper, title : String) -> String {
   )
   for i, it in paper.items {
     sb.write_string(
-      "\{i + 1}. \{escape_html(it.signature)}  |  Δ=\{it.certificate.discriminant.to_string()}  |  fp=\{escape_html(it.fingerprint)}\n",
+      "\{i + 1}. \{escape_html(it.signature)}  |  fp=\{escape_html(it.fingerprint)}\n",
     )
   }
   sb.write_string("</pre></details>")

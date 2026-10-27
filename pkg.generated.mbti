@@ -6,7 +6,11 @@ pub fn assemble(Pool, String, Blueprint) -> Result[Paper, String]
 
 pub fn build_quadratic(Schema, Map[String, Rat]) -> Result[Item, String]
 
+pub fn build_rational(Schema, Map[String, Rat]) -> Result[Item, String]
+
 pub fn classify_quadratic(Rat, Rat, Array[Rat]) -> (Int32, Array[String])
+
+pub fn classify_rational(Rat, Rat, Rat) -> (Int32, Array[String])
 
 pub fn escape_html(String) -> String
 
@@ -30,6 +34,8 @@ pub fn rat_one() -> Rat
 
 pub fn rat_zero() -> Rat
 
+pub fn rebuild_quadratic(Certificate) -> Poly
+
 pub fn render_answer_key(Paper, String) -> String
 
 pub fn render_markdown(Paper, String) -> String
@@ -47,6 +53,8 @@ pub fn tokenize(String) -> Array[Token]
 pub fn trim(String) -> String
 
 pub fn verify_quadratic(Poly, Array[Rat]) -> (Verdict, Certificate)
+
+pub fn verify_rational(Poly, Poly, Rat, Array[Rat]) -> (Verdict, Certificate)
 
 // Errors
 pub suberror SchemaError {
@@ -67,14 +75,11 @@ pub fn Blueprint::new(Int32, Int32) -> Self
 pub fn Blueprint::with_levels(Array[(Int32, Int32)], Int32) -> Self
 
 pub(all) struct Certificate {
-  a : Rat
-  b : Rat
-  c : Rat
-  discriminant : Rat
-  sqrt_discriminant : Rat?
-  formula_roots : Array[Rat]
+  fields : Array[(String, String)]
+  payload : Array[Rat]
   robust : Bool
 }
+pub fn Certificate::field(Self, String) -> String?
 pub fn Certificate::to_lines(Self) -> Array[String]
 
 pub enum CmpOp {
@@ -104,6 +109,7 @@ pub fn Expr::vars(Self) -> Array[String]
 
 pub enum Family {
   FQuadratic
+  FRational
 }
 pub fn Family::to_string(Self) -> String
 
@@ -117,6 +123,7 @@ pub(all) struct Item {
   certificate : Certificate
   robust : Bool
   signature : String
+  family : Family
   tags : Array[String]
 }
 pub fn Item::answer_text(Self) -> String
@@ -237,6 +244,9 @@ pub enum Verdict {
   NoRealRoots
   DoubleRoot
   IrrationalRoots
+  ExtraneousRoot
+  Identity
+  NotLinear
   AnswerMismatch(String)
 }
 pub fn Verdict::is_well_posed(Self) -> Bool

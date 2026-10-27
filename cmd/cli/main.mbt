@@ -103,9 +103,21 @@ fn reverify(pool : @kiln.Pool) -> (Int32, Int32) {
   let mut bad = 0
   for item in pool.items {
     let cert = item.certificate
-    let p = @kiln.Poly::new([cert.c, cert.b, cert.a])
-    let (v, _) = @kiln.verify_quadratic(p, item.answers)
-    if v.is_well_posed() {
+    let verdict = match item.family {
+      FQuadratic => {
+        let p = @kiln.rebuild_quadratic(cert)
+        let (v, _) = @kiln.verify_quadratic(p, item.answers)
+        v
+      }
+      FRational => {
+        let y = cert.payload
+        let num = @kiln.Poly::new([y[0], y[1]])
+        let den = @kiln.Poly::new([y[2], y[3]])
+        let (v, _) = @kiln.verify_rational(num, den, y[4], item.answers)
+        v
+      }
+    }
+    if verdict.is_well_posed() {
       ok = ok + 1
     } else {
       bad = bad + 1
@@ -199,7 +211,7 @@ fn cmd_check(argv : Array[String]) -> Unit {
     println("")
     for item in pool.items {
       println(
-        "\{item.fingerprint}  [\{item.level_label()}]  Δ=\{item.certificate.discriminant.to_string()}  \{item.answer_text()}",
+        "\{item.fingerprint}  [\{item.level_label()}]  \{item.answer_text()}",
       )
     }
   }

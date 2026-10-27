@@ -117,6 +117,14 @@ moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
 - `out/answers.html` — 答案页，含难度依据与复核凭证
 - `out/worksheet.md` — 便于粘贴的纯文本版
 
+仓库里带三个示例 schema：
+
+| 文件 | 族 | 说明 |
+|---|---|---|
+| `examples/quadratic.kiln` | quadratic | 整数根一元二次方程，171 道唯一题 |
+| `examples/rational.kiln` | rational | 分式方程，312 道唯一题 |
+| `examples/rational_with_extraneous.kiln` | rational | **反面教材**：故意不写 `r != k`，让验证器拦下 13 道增根题 |
+
 出卷失败不会返回一张残卷，而是指名道姓地告诉你缺口：
 
 ```
@@ -154,7 +162,8 @@ schema 是声明式的，不做计算，只描述「题族长什么样」：
 | `parse.mbt` | 递归下降语法 | 错误一律带行号；解析与校验分离 |
 | `engine.mbt` | 枚举与题池 | 深度优先枚举推导链，叶子处做条件检查与去重 |
 | `verify.mbt` | 独立验证 | 判别式 → 开方 → 求根公式，与生成路径完全分离 |
-| `family_quadratic.mbt` | 验证族 | 逆向构造、题面渲染、可解释难度、结构标签 |
+| `family_quadratic.mbt` | 二次族 | 逆向构造、题面渲染、可解释难度、结构标签 |
+| `family_rational.mbt` | 分式族 | 交叉相乘验证、增根判定、分母零点检查 |
 | `canon`（在 `poly.mbt`） | 结构指纹 | 同解规范化 |
 | `paper.mbt` | 组卷 | 难度配额 + 结构多样性 + 已选集合 + 不可行解释 |
 | `render.mbt` | 输出 | HTML / Markdown，全部转义 |
@@ -198,7 +207,7 @@ schema.kiln ──parse──> Schema ──enumerate──> 候选参数组
 
 ## 测试
 
-44 个测试，`moon test` 全绿：
+55 个测试，`moon test` 全绿：
 
 - **精确算术**：符号归一、约分、比较、精确开方（含非完全平方必须返回 `None`）
 - **多项式**：展开、求值、同解规范化（缩放合并、不同方程不误合并、有理系数清分母）
@@ -221,7 +230,18 @@ schema.kiln ──parse──> Schema ──enumerate──> 候选参数组
 - 不做几何证明、不做自然语言应用题
 - 不做在线刷题平台、不做账号体系
 
-当前只实现 `quadratic` 一个验证族。加一个族需要：一个 `build_*`、一个 `verify_*`、一组结构标签，以及一条 schema。引擎的枚举、去重、组卷、渲染全部复用。
+目前已实现两个验证族：`quadratic`（整数根一元二次方程）与 `rational`（分式方程，含增根判定）。
+
+加第三个族只需要：一个 `build_*`、一个 `verify_*`、一组结构标签，以及一条 schema。引擎的枚举、去重、组卷、渲染全部复用——不需要改 `engine.mbt` 以外的任何调度代码。
+
+分式族是「适定性」最有说服力的证据。把它那条 `require r != k` 删掉，13 个候选会去分母解出根恰好等于分母零点——方程其实无解，属于典型增根。验证器全部拦下，reason 写作 `extraneous-root`：
+
+```
+$ moon run cmd/cli --target js -- check --schema examples/rational_with_extraneous.kiln
+candidates  169  (rejected 13, duplicates 0)
+rejects     1 distinct reason(s)
+            - extraneous-root
+```
 
 ---
 
@@ -232,7 +252,7 @@ schema.kiln ──parse──> Schema ──enumerate──> 候选参数组
 - [x] 逆向构造 + 适定性判定 + 凭证
 - [x] 组卷（难度配额、结构多样性、不可行解释）
 - [x] HTML / Markdown 输出、CLI
-- [ ] 第二个验证族：分式方程（增根检测）
+- [x] 第二个验证族：分式方程（增根检测）
 - [ ] 平行卷：A/B 卷按细目表做等价匹配
 - [ ] 题池 JSON 导入导出，便于与既有题库对接
 

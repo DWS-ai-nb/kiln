@@ -44,6 +44,7 @@ pub struct VarDecl {
 ///|
 pub enum Family {
   FQuadratic
+  FRational
 }
 
 ///|
@@ -172,6 +173,7 @@ pub fn Require::check(self : Require, env : Map[String, Rat]) -> Bool? {
 pub fn Family::to_string(self : Family) -> String {
   match self {
     FQuadratic => "quadratic"
+    FRational => "rational"
   }
 }
 

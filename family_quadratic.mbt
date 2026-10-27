@@ -36,6 +36,7 @@ pub fn build_quadratic(
     certificate: cert,
     robust: cert.robust,
     signature: "a=\{a.to_string()}, b=\{b.to_string()}, c=\{c.to_string()}",
+    family: FQuadratic,
     tags,
   })
 }

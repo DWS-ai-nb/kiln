@@ -122,9 +122,10 @@ fn Parser::parse_family(self : Parser) -> Family raise SchemaError {
   let name = self.expect_ident()
   match name {
     "quadratic" => FQuadratic
+    "rational" => FRational
     other =>
       raise SchemaError(
-        "line \{t.line}: unknown family '\{other}' (supported: quadratic)",
+        "line \{t.line}: unknown family '\{other}' (supported: quadratic, rational)",
       )
   }
 }

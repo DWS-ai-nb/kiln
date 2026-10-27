@@ -1,0 +1,26 @@
+# 分式方程 · 一次型
+#
+# 这条 schema 专门用来说明「适定性」为什么不能省。
+# 分式方程有一个分母零点（这里就是 k）。若去分母解出来的根恰好等于 k，
+# 方程其实无解——这就是增根。生成器只负责构造，判定交给验证器；
+# 想造一道带增根的坏题，schema 里把 require 去掉就行，验证器会把它拦下来。
+
+schema "rational_linear"
+family rational
+title "分式方程 · 一次型"
+
+answer {
+  r: int in [-6, 6]
+}
+
+param {
+  k: int in [-6, 6]
+  q: int in [2, 3]
+  p: q * (r - k) - r
+}
+
+require {
+  r != k
+}
+
+ask "解方程 ({num})/({den}) = {q}"

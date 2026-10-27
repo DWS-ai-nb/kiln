@@ -12,6 +12,9 @@ pub enum Verdict {
   NoRealRoots
   DoubleRoot
   IrrationalRoots
+  ExtraneousRoot
+  Identity
+  NotLinear
   AnswerMismatch(String)
 }
 
@@ -23,6 +26,9 @@ pub fn Verdict::to_string(self : Verdict) -> String {
     NoRealRoots => "no-real-roots"
     DoubleRoot => "double-root"
     IrrationalRoots => "irrational-roots"
+    ExtraneousRoot => "extraneous-root"
+    Identity => "identity"
+    NotLinear => "not-linear"
     AnswerMismatch(d) => "answer-mismatch: \{d}"
   }
 }
@@ -36,40 +42,37 @@ pub fn Verdict::is_well_posed(self : Verdict) -> Bool {
 }
 
 ///|
-/// Everything a third party needs to re-check the item without trusting the
-/// generator: the coefficients, the discriminant, its exact square root, and
-/// the roots the quadratic formula produces.
+/// What a third party needs to re-check an item without trusting the generator.
+///
+/// `fields` is human-readable evidence; `payload` is the raw data the verifier
+/// consumes, in family-defined order. Keeping the payload numeric (and exact)
+/// is what makes independent re-verification possible from the outside.
 pub(all) struct Certificate {
-  a : Rat
-  b : Rat
-  c : Rat
-  discriminant : Rat
-  sqrt_discriminant : Rat?
-  formula_roots : Array[Rat]
+  fields : Array[(String, String)]
+  payload : Array[Rat]
   robust : Bool
 }
 
 ///|
 pub fn Certificate::to_lines(self : Certificate) -> Array[String] {
-  let lines : Array[String] = []
-  lines.push("a = \{self.a.to_string()}")
-  lines.push("b = \{self.b.to_string()}")
-  lines.push("c = \{self.c.to_string()}")
-  lines.push("Δ = b² - 4ac = \{self.discriminant.to_string()}")
-  match self.sqrt_discriminant {
-    Some(r) => lines.push("√Δ = \{r.to_string()}")
-    None => lines.push("√Δ has no exact value")
+  let out : Array[String] = []
+  for entry in self.fields {
+    let (k, v) = entry
+    out.push("\{k} = \{v}")
   }
-  let rs = StringBuilder()
-  for i, r in self.formula_roots {
-    if i > 0 {
-      rs.write_string(", ")
+  out
+}
+
+///|
+pub fn Certificate::field(self : Certificate, key : String) -> String? {
+  let mut found : String? = None
+  for entry in self.fields {
+    let (k, v) = entry
+    if k == key {
+      found = Some(v)
     }
-    rs.write_string(r.to_string())
   }
-  lines.push("roots = \{rs.to_string()}")
-  lines.push("robust = \{self.robust}")
-  lines
+  found
 }
 
 ///|
@@ -145,6 +148,37 @@ fn is_robust(a : Rat, b : Rat, c : Rat) -> Bool {
 }
 
 ///|
+fn quadratic_certificate(
+  a : Rat,
+  b : Rat,
+  c : Rat,
+  d : Rat,
+  sqrt_d : Rat?,
+  roots : Array[Rat],
+  robust : Bool,
+) -> Certificate {
+  let fields : Array[(String, String)] = []
+  fields.push(("a", a.to_string()))
+  fields.push(("b", b.to_string()))
+  fields.push(("c", c.to_string()))
+  fields.push(("Δ = b² - 4ac", d.to_string()))
+  match sqrt_d {
+    Some(s) => fields.push(("√Δ", s.to_string()))
+    None => fields.push(("√Δ", "无精确值"))
+  }
+  let sb = StringBuilder()
+  for i, r in roots {
+    if i > 0 {
+      sb.write_string(", ")
+    }
+    sb.write_string(r.to_string())
+  }
+  fields.push(("求根公式给出", sb.to_string()))
+  fields.push(("robust", if robust { "true" } else { "false" }))
+  { fields, payload: [a, b, c], robust, }
+}
+
+///|
 /// Verify that `p(x) = 0` has exactly the declared solution set, with two
 /// distinct rational roots.
 pub fn verify_quadratic(
@@ -157,75 +191,26 @@ pub fn verify_quadratic(
   let d = discriminant(a, b, c)
   let robust = is_robust(a, b, c)
   if a.is_zero() || p.degree() != 2 {
-    return (
-      NotQuadratic,
-      {
-        a,
-        b,
-        c,
-        discriminant: d,
-        sqrt_discriminant: None,
-        formula_roots: [],
-        robust,
-      },
-    )
+    return (NotQuadratic, quadratic_certificate(a, b, c, d, None, [], robust))
   }
   if d.sign() < 0 {
-    return (
-      NoRealRoots,
-      {
-        a,
-        b,
-        c,
-        discriminant: d,
-        sqrt_discriminant: None,
-        formula_roots: [],
-        robust,
-      },
-    )
+    return (NoRealRoots, quadratic_certificate(a, b, c, d, None, [], robust))
   }
   if d.is_zero() {
     let r = b.neg().div(a.mul(rat_int(2L)))
     return (
       DoubleRoot,
-      {
-        a,
-        b,
-        c,
-        discriminant: d,
-        sqrt_discriminant: Some(rat_zero()),
-        formula_roots: [r],
-        robust,
-      },
+      quadratic_certificate(a, b, c, d, Some(rat_zero()), [r], robust),
     )
   }
   match d.sqrt_exact() {
     None =>
-      (
-        IrrationalRoots,
-        {
-          a,
-          b,
-          c,
-          discriminant: d,
-          sqrt_discriminant: None,
-          formula_roots: [],
-          robust,
-        },
-      )
+      (IrrationalRoots, quadratic_certificate(a, b, c, d, None, [], robust))
     Some(s) => {
       let two_a = a.mul(rat_int(2L))
       let r1 = b.neg().add(s).div(two_a)
       let r2 = b.neg().sub(s).div(two_a)
-      let cert = {
-        a,
-        b,
-        c,
-        discriminant: d,
-        sqrt_discriminant: Some(s),
-        formula_roots: [r1, r2],
-        robust,
-      }
+      let cert = quadratic_certificate(a, b, c, d, Some(s), [r1, r2], robust)
       if r1.equal(r2) {
         return (DoubleRoot, cert)
       }
@@ -268,7 +253,7 @@ test "verifier accepts a well-posed quadratic" {
   let p = Poly::new([rat_int(6L), rat_int(-5L), rat_one()])
   let (v, cert) = verify_quadratic(p, [rat_int(2L), rat_int(3L)])
   inspect(v.is_well_posed(), content="true")
-  inspect(cert.discriminant.to_string(), content="1")
+  debug_inspect(cert.field("Δ = b² - 4ac"), content="Some(\"1\")")
   inspect(cert.robust, content="false")
 }
 
@@ -301,4 +286,13 @@ test "verifier rejects irrational roots" {
   let p = Poly::new([rat_int(-2L), rat_zero(), rat_one()])
   let (v, _) = verify_quadratic(p, [rat_int(1L), rat_int(-1L)])
   inspect(v.to_string(), content="irrational-roots")
+}
+
+///|
+test "certificate payload is enough to rebuild the polynomial" {
+  let p = Poly::new([rat_int(6L), rat_int(-5L), rat_one()])
+  let (_, cert) = verify_quadratic(p, [rat_int(2L), rat_int(3L)])
+  inspect(cert.payload.length(), content="3")
+  let rebuilt = Poly::new([cert.payload[2], cert.payload[1], cert.payload[0]])
+  inspect(rebuilt.canonical_key(), content="1,-5,6")
 }

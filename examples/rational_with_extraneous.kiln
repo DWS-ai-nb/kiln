@@ -1,0 +1,24 @@
+# 故意不写 `r != k` 的分式方程 schema。
+#
+# 这是本项目的「反面教材」：允许答案等于分母零点，于是 169 个候选里有 13 个
+# 去分母后解出的根恰好是分母零点——方程其实无解，属于典型增根。
+# 验证器会把这 13 个全部拒掉，并在 reason 里写明 extraneous-root。
+#
+# 跑一下就能看到：
+#   moon run cmd/cli -- check --schema examples/rational_with_extraneous.kiln
+
+schema "rational_with_extraneous"
+family rational
+title "分式方程 · 含增根候选"
+
+answer {
+  r: int in [-6, 6]
+}
+
+param {
+  k: int in [-6, 6]
+  q: int in [2, 3]
+  p: q * (r - k) - r
+}
+
+ask "解方程 ({num})/({den}) = {q}"

@@ -48,8 +48,7 @@ test "every exported item can be re-checked with exported functions only" {
     Err(e) => abort("unexpected: \{e}")
   }
   for item in paper.items {
-    let cert = item.certificate
-    let poly = @kiln.Poly::new([cert.c, cert.b, cert.a])
+    let poly = @kiln.rebuild_quadratic(item.certificate)
     let (verdict, _) = @kiln.verify_quadratic(poly, item.answers)
     if !verdict.is_well_posed() {
       abort("item failed re-verification: \{item.question}")
