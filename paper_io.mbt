@@ -22,6 +22,7 @@ pub(all) struct ItemFile {
   fingerprint : String
   family : Family
   payload : Array[Rat]
+  tags : Array[String]
 }
 
 ///|
@@ -65,6 +66,7 @@ pub fn paper_to_json(paper : Paper, title : String) -> Json {
     obj["fingerprint"] = Json::string(it.fingerprint)
     obj["family"] = Json::string(it.family.to_string())
     obj["payload"] = rats_to_json(it.certificate.payload)
+    obj["tags"] = Json::array(it.tags.map(fn(t) { Json::string(t) }))
     items.push(Json::object(obj))
   }
   let root : Map[String, Json] = Map([])
@@ -159,6 +161,18 @@ fn field_array(obj : Json, key : String) -> Array[Json] raise PaperError {
 }
 
 ///|
+fn field_strings(obj : Json, key : String) -> Array[String] raise PaperError {
+  let out : Array[String] = []
+  for entry in field_array(obj, key) {
+    match as_text(entry) {
+      Some(t) => out.push(t)
+      None => raise PaperError("字段 '\{key}' 的元素应为字符串")
+    }
+  }
+  out
+}
+
+///|
 fn field_rats(obj : Json, key : String) -> Array[Rat] raise PaperError {
   let out : Array[Rat] = []
   for entry in field_array(obj, key) {
@@ -199,6 +213,7 @@ pub fn paper_from_json_string(src : String) -> Result[PaperFile, String] {
         fingerprint: field_string(entry, "fingerprint"),
         family,
         payload: field_rats(entry, "payload"),
+        tags: field_strings(entry, "tags"),
       })
     }
     Ok({

@@ -16,6 +16,9 @@ fn usage() -> Unit {
   println("  kiln check --schema <file> [--verbose]")
   println("  kiln pool  --schema <file> [--limit N] [--show N]")
   println("  kiln verify --file <paper.json>")
+  println(
+    "  kiln parallel --schema <file> --file <A.json> [--seed S] [--out DIR]",
+  )
   println("  kiln help | --version")
   println("")
   println("gen 选项：")
@@ -447,6 +450,80 @@ fn cmd_verify(argv : Array[String]) -> Unit {
 }
 
 ///|
+/// Build a parallel form (B 卷) from an existing paper file (A 卷).
+fn cmd_parallel(argv : Array[String]) -> Unit {
+  let schema_path = match flag(argv, "--schema") {
+    Some(p) => p
+    None => {
+      println("缺少 --schema")
+      usage()
+      abort("kiln parallel: 未指定 schema")
+    }
+  }
+  let a_path = match flag(argv, "--file") {
+    Some(p) => p
+    None => {
+      println("缺少 --file")
+      usage()
+      abort("kiln parallel: 未指定 A 卷文件")
+    }
+  }
+  let schema = match load_schema_file(schema_path) {
+    Ok(s) => s
+    Err(e) => {
+      println("读入失败：\{e}")
+      abort("kiln parallel: schema 读入失败")
+    }
+  }
+  let a_text = @fs.read_file_to_string(a_path) catch {
+    _ => {
+      println("无法读取：\{a_path}")
+      abort("kiln parallel: A 卷文件无法读取")
+    }
+  }
+  let a = match @kiln.paper_from_json_string(a_text) {
+    Ok(pf) => pf
+    Err(e) => {
+      println("格式错误：\{e}")
+      abort("kiln parallel: A 卷格式不合法")
+    }
+  }
+  let seed = flag_int(argv, "--seed", 42)
+  let out = match flag(argv, "--out") {
+    Some(d) => d
+    None => "out-b"
+  }
+  let pool = @kiln.generate(schema, 0)
+  let b = match @kiln.parallel_paper_file(pool, a, seed) {
+    Ok(p) => p
+    Err(e) => {
+      println("")
+      println("平行卷失败：\{e}")
+      abort("kiln parallel: 无法构造平行卷")
+    }
+  }
+  let title = if schema.title == "" { schema.name } else { schema.title }
+  ensure_dir(out)
+  let ws = @kiln.render_worksheet(b, title + " · B卷")
+  let key = @kiln.render_answer_key(b, title + " · B卷")
+  let json = @kiln.paper_to_json_string(b, title + " · B卷")
+  let f1 = save("\{out}/worksheet.html", ws)
+  let f2 = save("\{out}/answers.html", key)
+  let f3 = save("\{out}/paper.json", json)
+  println("")
+  println(
+    "paper       平行卷 \{b.size()} 题 · 结构 \{b.request} · seed \{seed}",
+  )
+  println("\{if f1 { "ok  " } else { "fail" }} \{out}/worksheet.html")
+  println("\{if f2 { "ok  " } else { "fail" }} \{out}/answers.html")
+  println("\{if f3 { "ok  " } else { "fail" }} \{out}/paper.json")
+  println("")
+  for i, item in b.items {
+    println("\{i + 1}. [\{item.level_label()}] \{item.question}")
+  }
+}
+
+///|
 /// Find the verb anywhere in `argv`.
 ///
 /// The wasm runner passes only the user arguments, while the JS runner passes
@@ -456,7 +533,12 @@ fn find_cmd(argv : Array[String]) -> String {
   let mut i = 0
   while i < argv.length() {
     let a = argv[i]
-    if a == "gen" || a == "check" || a == "pool" || a == "verify" || a == "help" {
+    if a == "gen" ||
+      a == "check" ||
+      a == "pool" ||
+      a == "verify" ||
+      a == "parallel" ||
+      a == "help" {
       return a
     }
     i = i + 1
@@ -486,6 +568,8 @@ fn main {
     cmd_pool(argv)
   } else if cmd == "verify" {
     cmd_verify(argv)
+  } else if cmd == "parallel" {
+    cmd_parallel(argv)
   } else {
     usage()
   }
