@@ -2,7 +2,7 @@
 
 **带适定性保证的可验证命题引擎。** 把「这道题应该长什么样」写成约束，反解出题目，并让每道题自带可机器复核的答案凭证。
 
-用 MoonBit 写，零浮点，纯确定性。同一份 schema、同一个 seed，在 wasm-gc / js / native 三个后端产出逐字节相同的卷子。
+用 MoonBit 写，零浮点，纯确定性。同一份 schema、同一个 seed，在 wasm-gc / js 两个后端产出逐字节相同的卷子（已用黄金文本验证；native 因本机无 C 工具链，交由 CI 校验）。
 
 ```
 candidates  171  (rejected 0, duplicates 0)
@@ -118,6 +118,9 @@ moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
 
 # 复核一份卷子：不读 schema，不重跑生成器，只凭证重算
 moon run cmd/cli --target js -- verify --file out/paper.json
+
+# 平行卷：给 A 卷造一份结构等价的 B 卷（难度逐题对齐、结构标签一致、题目不重）
+moon run cmd/cli --target js -- parallel --schema examples/quadratic.kiln --file out/paper.json --seed 11 --out out-b
 
 # 跨周复用：这周发的题，下周不再出现
 moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln \
@@ -257,7 +260,7 @@ schema.kiln ──parse──> Schema ──enumerate──> 候选参数组
 
 **零浮点。** 全程 `Int64` 有理数。原因有二：教学题目的答案本就该精确；浮点会毁掉跨后端逐字节一致性这个可验证承诺。
 
-**自研 PRNG 而非 `@random`。** 只用 20 行 splitmix64，因为可复现性是契约：同一 seed 必须在三个后端产出同一张卷子，不能依赖平台熵的回落行为。
+**自研 PRNG 而非 `@random`。** 只用 20 行 splitmix64，因为可复现性是契约：同一 seed 必须在每个后端产出同一张卷子，不能依赖平台熵的回落行为。
 
 **难度是可解释的，不是黑箱。** 一个小的加性模型，每个因子都有名字（「根绝对值较大」「两根异号」「方程缺项（偏易）」）。老师可以不同意模型，然后去改 schema——而不是面对一个神秘数字。
 
@@ -267,7 +270,7 @@ schema.kiln ──parse──> Schema ──enumerate──> 候选参数组
 
 ## 测试
 
-65 个测试，`moon test` 全绿；`moon test --target wasm-gc` 与 `--target js` 各跑一遍，同一个黄金文本必须同时通过。
+69 个测试，`moon test` 全绿；`moon test --target wasm-gc` 与 `--target js` 各跑一遍，同一个黄金文本必须同时通过。
 
 - **精确算术**：符号归一、约分、比较、精确开方（含非完全平方必须返回 `None`）
 - **多项式**：展开、求值、同解规范化（缩放合并、不同方程不误合并、有理系数清分母）
@@ -319,7 +322,7 @@ rejects     1 distinct reason(s)
 - [x] 跨周去重账本（`--exclude` / `--record`）
 - [x] `kiln.paper/1` 卷子格式 + `verify` 命令 + Python 参考实现
 - [x] CI：双后端测试、`--deny-warn`、格式检查
-- [ ] 平行卷：A/B 卷按结构指纹做统计等价匹配
+- [x] 平行卷：A/B 卷按结构等价（`kiln parallel`）
 - [ ] 题池 JSON 导入导出，便于与既有题库对接
 
 ---

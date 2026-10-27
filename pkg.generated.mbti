@@ -26,6 +26,10 @@ pub fn paper_to_json(Paper, String) -> Json
 
 pub fn paper_to_json_string(Paper, String) -> String
 
+pub fn parallel_form(Pool, Paper, Int32) -> Result[Paper, String]
+
+pub fn parallel_paper_file(Pool, PaperFile, Int32) -> Result[Paper, String]
+
 pub fn parse_int_opt(String) -> Int32?
 
 pub fn parse_rat(String) -> Rat?
@@ -150,6 +154,7 @@ pub(all) struct ItemFile {
   fingerprint : String
   family : Family
   payload : Array[Rat]
+  tags : Array[String]
 }
 
 pub(all) struct Paper {
@@ -246,6 +251,12 @@ pub(all) struct Schema {
   params : Array[VarDecl]
   requires : Array[Require]
   ask : String
+}
+
+pub(all) struct Slot {
+  level : Int32
+  tags : Array[String]
+  fingerprint : String
 }
 
 pub enum Tok {
