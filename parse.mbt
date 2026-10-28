@@ -132,13 +132,16 @@ fn Parser::parse_family(self : Parser) -> Family raise SchemaError {
 
 ///|
 fn Parser::parse_domain(self : Parser) -> (Int32, Int32) raise SchemaError {
+  let line = self.peek().line
   self.expect_punct("[")
   let lo = self.parse_signed_int()
   self.expect_punct(",")
   let hi = self.parse_signed_int()
   self.expect_punct("]")
   if lo > hi {
-    raise SchemaError("empty domain [\{lo}, \{hi}]: lower bound exceeds upper")
+    raise SchemaError(
+      "line \{line}: empty domain [\{lo}, \{hi}]: lower bound exceeds upper",
+    )
   }
   (lo, hi)
 }
@@ -165,6 +168,7 @@ fn Parser::parse_vardecls(self : Parser) -> Array[VarDecl] raise SchemaError {
     if self.at_eof() {
       raise SchemaError("unexpected end of file inside a block")
     }
+    let line = self.peek().line
     let name = self.expect_ident()
     self.expect_punct(":")
     if self.at_ident("int") {
@@ -174,10 +178,10 @@ fn Parser::parse_vardecls(self : Parser) -> Array[VarDecl] raise SchemaError {
       }
       let _ = self.advance()
       let (lo, hi) = self.parse_domain()
-      out.push({ name, domain: Some((lo, hi)), expr: None, })
+      out.push({ name, domain: Some((lo, hi)), expr: None, line, })
     } else {
       let e = self.parse_expr()
-      out.push({ name, domain: None, expr: Some(e), })
+      out.push({ name, domain: None, expr: Some(e), line, })
     }
     let _ = self.eat_punct(",")
   }
@@ -193,10 +197,11 @@ fn Parser::parse_requires(self : Parser) -> Array[Require] raise SchemaError {
     if self.at_eof() {
       raise SchemaError("unexpected end of file inside a require block")
     }
+    let line = self.peek().line
     let left = self.parse_expr()
     let op = self.parse_cmp()
     let right = self.parse_expr()
-    out.push({ left, op, right, })
+    out.push({ left, op, right, line, })
     let _ = self.eat_punct(",")
   }
   self.expect_punct("}")
@@ -313,6 +318,7 @@ fn Parser::parse_atom(self : Parser) -> Expr raise SchemaError {
 ///|
 fn Parser::parse_schema(self : Parser) -> Schema raise SchemaError {
   let mut name = ""
+  let mut schema_line : Int32 = 0
   let mut family = FQuadratic
   let mut title = ""
   let mut answers : Array[VarDecl] = []
@@ -325,6 +331,7 @@ fn Parser::parse_schema(self : Parser) -> Schema raise SchemaError {
       TEof => break
       TIdent(kw) =>
         if kw == "schema" {
+          schema_line = self.peek().line
           let _ = self.advance()
           name = self.expect_string()
         } else if kw == "family" {
@@ -351,7 +358,7 @@ fn Parser::parse_schema(self : Parser) -> Schema raise SchemaError {
       k => raise SchemaError("line \{t.line}: unexpected \{describe(k)}")
     }
   }
-  { name, family, title, answers, params, requires, ask, }
+  { name, family, title, answers, params, requires, ask, line: schema_line, }
 }
 
 ///|
@@ -375,35 +382,56 @@ pub fn load_schema(src : String) -> Result[Schema, String] {
 }
 
 ///|
+fn at(line : Int32, msg : String) -> String {
+  if line > 0 {
+    "line \{line}: \{msg}"
+  } else {
+    msg
+  }
+}
+
+///|
 fn validate(s : Schema) -> String? {
   if s.name == "" {
     return Some("schema: missing `schema \"name\"` header")
   }
   if s.answers.length() == 0 {
-    return Some("schema '\{s.name}': at least one answer variable is required")
+    return Some(
+      at(s.line, "schema '\{s.name}': at least one answer variable is required"),
+    )
   }
   let seen : Array[String] = []
   for v in s.answers {
     if contains_str(seen, v.name) {
-      return Some("schema '\{s.name}': duplicate variable '\{v.name}'")
+      return Some(
+        at(v.line, "schema '\{s.name}': duplicate variable '\{v.name}'"),
+      )
     }
     seen.push(v.name)
     if v.domain is None {
       return Some(
-        "schema '\{s.name}': answer variable '\{v.name}' needs a domain, e.g. `[1, 9]`",
+        at(
+          v.line,
+          "schema '\{s.name}': answer variable '\{v.name}' needs a domain, e.g. `[1, 9]`",
+        ),
       )
     }
   }
   for v in s.params {
     if contains_str(seen, v.name) {
-      return Some("schema '\{s.name}': duplicate variable '\{v.name}'")
+      return Some(
+        at(v.line, "schema '\{s.name}': duplicate variable '\{v.name}'"),
+      )
     }
     match v.expr {
       Some(e) =>
         for used in e.vars() {
           if !contains_str(seen, used) {
             return Some(
-              "schema '\{s.name}': '\{v.name}' refers to undefined variable '\{used}'",
+              at(
+                v.line,
+                "schema '\{s.name}': '\{v.name}' refers to undefined variable '\{used}'",
+              ),
             )
           }
         }
@@ -416,14 +444,19 @@ fn validate(s : Schema) -> String? {
       for used in side.vars() {
         if !contains_str(seen, used) {
           return Some(
-            "schema '\{s.name}': require clause refers to undefined variable '\{used}'",
+            at(
+              r.line,
+              "schema '\{s.name}': require clause refers to undefined variable '\{used}'",
+            ),
           )
         }
       }
     }
   }
   if s.ask == "" {
-    return Some("schema '\{s.name}': missing `ask \"...\"` template")
+    return Some(
+      at(s.line, "schema '\{s.name}': missing `ask \"...\"` template"),
+    )
   }
   None
 }
@@ -482,7 +515,11 @@ test "parse rejects an undefined variable" {
   let src = "schema \"s\"\nfamily quadratic\nanswer {\n x: int in [1, 2]\n}\nparam {\n y: x + z\n}\nask \"{poly}\"\n"
   match load_schema(src) {
     Ok(_) => abort("expected a validation error")
-    Err(e) => inspect(e.contains("undefined variable"), content="true")
+    Err(e) => {
+      inspect(e.contains("undefined variable"), content="true")
+      // Semantic errors carry the line of the offending declaration too.
+      inspect(e.contains("line 7"), content="true")
+    }
   }
 }
 

@@ -30,6 +30,7 @@ pub struct Require {
   left : Expr
   op : CmpOp
   right : Expr
+  line : Int32
 }
 
 ///|
@@ -39,6 +40,7 @@ pub struct VarDecl {
   name : String
   domain : (Int32, Int32)?
   expr : Expr?
+  line : Int32
 }
 
 ///|
@@ -56,6 +58,7 @@ pub(all) struct Schema {
   params : Array[VarDecl]
   requires : Array[Require]
   ask : String
+  line : Int32
 }
 
 ///|

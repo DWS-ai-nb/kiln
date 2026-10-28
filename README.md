@@ -205,19 +205,23 @@ schema 是声明式的，不做计算，只描述「题族长什么样」：
 | 文件 | 职责 | 关键点 |
 |---|---|---|
 | `rat.mbt` | 精确有理数 | 归一化不变量（`den>0`、互素、零为 `0/1`）；精确开方 |
+| `kiln.mbt` | 门面 API | `quick_paper`：文本 → 卷子，一条调用走完全链路 |
 | `poly.mbt` | 一元多项式 | 正规形；`canonical_key` 做同解规范化 |
 | `lexer.mbt` | 词法 | 不抛异常，坏字符变 `TBad` 由语法层定位 |
 | `ast.mbt` | 表达式与求值 | 除以零返回 `None` 而非崩溃，语义上就是「此处无定义」 |
 | `parse.mbt` | 递归下降语法 | 错误一律带行号；解析与校验分离 |
 | `engine.mbt` | 枚举与题池 | 深度优先枚举推导链，叶子处做条件检查与去重 |
 | `verify.mbt` | 独立验证 | 判别式 → 开方 → 求根公式，与生成路径完全分离 |
+| `strutil.mbt` | 字符串工具 | 行连接、切分、trim、整数解析，无依赖 |
 | `family_quadratic.mbt` | 二次族 | 逆向构造、题面渲染、可解释难度、结构标签 |
 | `family_rational.mbt` | 分式族 | 交叉相乘验证、增根判定、分母零点检查 |
 | `canon`（在 `poly.mbt`） | 结构指纹 | 同解规范化 |
 | `paper.mbt` | 组卷 | 难度配额 + 结构多样性 + 已选集合 + 不可行解释 |
+| `parallel.mbt` | 平行卷 | A/B 卷结构等价：同难度 + 同结构标签 + 零重题指纹 |
 | `render.mbt` | 输出 | HTML / Markdown，全部转义 |
 | `paper_io.mbt` | 卷子文件 | `kiln.paper/1` 的读写与独立校验 |
 | `tools/verify_reference.py` | 参考校验器 | 112 行 Python，与实现零共享 |
+| `tools/push_via_api.py` 等 | 发布脚本 | 经 Git Data API 推送历史 / 增量同步（沙箱环境用） |
 | `rng.mbt` | 确定性随机 | splitmix64，20 行，不依赖平台熵 |
 | `cmd/cli` | 命令行 | 四个动词，无配置文件；账本读写在 CLI 层 |
 | `golden_wbtest.mbt` | 跨后端黄金测试 | 把整卷输出钉死，两个后端同时校验 |
