@@ -102,6 +102,11 @@ moon update
 ```
 
 ```bash
+# 或作为库使用（已发布到 mooncakes）
+moon add DWS-ai-nb/kiln
+```
+
+```bash
 # 构建（Windows 上没有 MSVC 时用 js 后端）
 moon build --target js
 

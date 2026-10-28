@@ -1,7 +1,7 @@
 import {
   "moonbitlang/core/env",
   "moonbitlang/x/fs",
-  "shier/kiln",
+  "DWS-ai-nb/kiln",
 }
 
 pkgtype(kind: "executable")

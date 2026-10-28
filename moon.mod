@@ -9,7 +9,7 @@
 //   "moonbitlang/x@0.4.6",
 // }
 
-name = "shier/kiln"
+name = "DWS-ai-nb/kiln"
 
 version = "0.1.0"
 

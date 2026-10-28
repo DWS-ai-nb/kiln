@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "shier/kiln"
+package "DWS-ai-nb/kiln"
 
 // Values
 pub fn assemble(Pool, String, Blueprint) -> Result[Paper, String]

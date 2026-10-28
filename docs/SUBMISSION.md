@@ -4,6 +4,7 @@
 **一句话**：带适定性保证的可验证命题引擎——把「这道题应该长什么样」写成约束，反解出题目，并让每道题自带可机器复核的答案凭证。
 **形态**：MoonBit 库 + CLI（不是刷题网站，不是题库系统）
 **许可**：Apache-2.0
+**发布**：GitHub <https://github.com/DWS-ai-nb/kiln> · Mooncakes <https://mooncakes.io/docs/DWS-ai-nb/kiln>
 
 ---
 
