@@ -1,0 +1,158 @@
+{
+  "format": "kiln.model/1",
+  "description": "错误更新：把 JS/server 兼容组合从表中删除；其它条件不变。",
+  "variables": [
+    {
+      "name": "runtime",
+      "domain": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "host",
+      "domain": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "storage",
+      "domain": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "persistent",
+      "domain": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "encrypted",
+      "domain": [
+        0,
+        1
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "runtime-host",
+      "assert": [
+        "table",
+        [
+          "runtime",
+          "host"
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "files-need-server",
+      "assert": [
+        "implies",
+        [
+          "==",
+          "storage",
+          1
+        ],
+        [
+          "==",
+          "host",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "indexeddb-needs-browser",
+      "assert": [
+        "implies",
+        [
+          "==",
+          "storage",
+          2
+        ],
+        [
+          "==",
+          "host",
+          0
+        ]
+      ]
+    },
+    {
+      "id": "persist-needs-storage",
+      "assert": [
+        "implies",
+        [
+          "==",
+          "persistent",
+          1
+        ],
+        [
+          "!=",
+          "storage",
+          0
+        ]
+      ]
+    },
+    {
+      "id": "encryption-needs-storage",
+      "assert": [
+        "implies",
+        [
+          "==",
+          "encrypted",
+          1
+        ],
+        [
+          "!=",
+          "storage",
+          0
+        ]
+      ]
+    },
+    {
+      "id": "persistence-required",
+      "assert": [
+        "==",
+        "persistent",
+        1
+      ]
+    }
+  ],
+  "objective": [
+    "+",
+    [
+      "*",
+      "runtime",
+      10
+    ],
+    [
+      "+",
+      [
+        "*",
+        "host",
+        3
+      ],
+      "storage"
+    ]
+  ]
+}

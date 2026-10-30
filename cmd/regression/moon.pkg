@@ -1,0 +1,9 @@
+import {
+  "moonbitlang/core/env",
+  "moonbitlang/x/fs",
+  "moonbitlang/x/sys",
+  "DWS-ai-nb/kiln/model",
+  "DWS-ai-nb/kiln/regression" @delta,
+}
+
+pkgtype(kind: "executable")

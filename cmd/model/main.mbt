@@ -64,7 +64,14 @@ fn parse_option_int(value : String) -> Int32 {
 
 ///|
 fn main {
-  let argv = @env.args()
+  let raw = @env.args()
+  // Direct Node execution includes node.exe before the script. Moonrun exposes
+  // only the executable at index zero. Normalize both supported launch modes.
+  let argv : Array[String] = []
+  let offset = if raw.length() > 1 && raw[1].has_suffix(".js") { 1 } else { 0 }
+  for i in offset..<raw.length() {
+    argv.push(raw[i])
+  }
   if argv.length() < 2 || argv[1] == "help" || argv[1] == "--help" {
     usage()
     return

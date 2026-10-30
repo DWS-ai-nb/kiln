@@ -1,0 +1,107 @@
+{
+  "format": "kiln.model/1",
+  "description": "合成价格规则：会员折扣与优惠券叠加，检查应付金额不为负。tier=0/1/2，金额单位为元。",
+  "variables": [
+    {
+      "name": "tier",
+      "domain": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "subtotal",
+      "domain": [
+        0,
+        50,
+        99,
+        100,
+        150,
+        200
+      ]
+    },
+    {
+      "name": "coupon",
+      "domain": [
+        0,
+        20,
+        50
+      ]
+    },
+    {
+      "name": "discount",
+      "domain": [
+        0,
+        10,
+        20
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "tier-discount",
+      "assert": [
+        "table",
+        [
+          "tier",
+          "discount"
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            10
+          ],
+          [
+            2,
+            20
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "coupon-eligible",
+      "assert": [
+        "implies",
+        [
+          ">",
+          "coupon",
+          0
+        ],
+        [
+          ">=",
+          "subtotal",
+          50
+        ]
+      ]
+    },
+    {
+      "id": "coupon-not-over-subtotal",
+      "assert": [
+        "<=",
+        "coupon",
+        "subtotal"
+      ]
+    },
+    {
+      "id": "nonnegative-charge",
+      "assert": [
+        ">=",
+        [
+          "-",
+          [
+            "-",
+            "subtotal",
+            "discount"
+          ],
+          "coupon"
+        ],
+        0
+      ]
+    }
+  ]
+}

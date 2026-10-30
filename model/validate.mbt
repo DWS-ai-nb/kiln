@@ -23,6 +23,7 @@ fn term_error(
         Some("unknown variable: " + n)
       }
     Neg(a) | Abs(a) => term_error(a, names, depth + 1, size)
+    Indicator(r) => rule_error(r, names, depth + 1, size)
     Add(a, b) | Sub(a, b) | Mul(a, b) | Div(a, b) | Mod(a, b) =>
       match term_error(a, names, depth + 1, size) {
         Some(e) => Some(e)
@@ -63,7 +64,7 @@ fn rule_error(
       }
       None
     }
-    Not(child) => rule_error(child, names, depth + 1, size)
+    Not(child) | Holds(child) => rule_error(child, names, depth + 1, size)
     Implies(a, b) =>
       match rule_error(a, names, depth + 1, size) {
         Some(e) => Some(e)

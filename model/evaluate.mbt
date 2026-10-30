@@ -35,6 +35,12 @@ fn evaluate_partial(
   env : Map[String, Int64],
 ) -> Result[Int64?, String] {
   match t {
+    Indicator(r) =>
+      match judge(r, env) {
+        Ok(Some(b)) => Ok(Some(if b { 1L } else { 0L }))
+        Ok(None) => Ok(None)
+        Err(e) => Err(e)
+      }
     Int(n) =>
       match checked(n) {
         Ok(n) => Ok(Some(n))
@@ -86,6 +92,11 @@ pub fn evaluate(
 ///|
 fn judge(r : Rule, env : Map[String, Int64]) -> Result[Bool?, String] {
   match r {
+    Holds(child) =>
+      match judge(child, env) {
+        Err(_) => Ok(Some(false))
+        other => other
+      }
     Eq(a, b) | Ne(a, b) | Lt(a, b) | Le(a, b) | Gt(a, b) | Ge(a, b) =>
       match (evaluate_partial(a, env), evaluate_partial(b, env)) {
         (Err(e), _) | (_, Err(e)) => Err(e)

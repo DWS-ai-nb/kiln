@@ -1,0 +1,8 @@
+import {
+  "DWS-ai-nb/kiln/model",
+  "moonbitlang/core/debug",
+}
+
+import {
+  "DWS-ai-nb/kiln/model",
+} for "test"

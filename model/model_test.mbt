@@ -7,6 +7,23 @@ fn[T] must(r : Result[T, String]) -> T {
 }
 
 ///|
+test "acceptance totalization and indicators preserve undefined semantics" {
+  let bad : @model.Rule = Eq(Div(Int(1L), Int(0L)), Int(1L))
+  assert_eq(count(one(Holds(bad))), 0)
+  assert_eq(count(one(Not(Holds(bad)))), 5)
+  assert_true(@model.evaluate(Indicator(bad), Map([])) is Err(_))
+  assert_eq(must(@model.evaluate(Indicator(Holds(bad)), Map([]))), 0L)
+  let doc : @model.Document = {
+    model: one(Holds(Eq(Var("x"), Int(1L)))),
+    objective: Some(Indicator(Ne(Var("x"), Int(0L)))),
+  }
+  assert_eq(
+    must(@model.parse_document(@model.document_to_json(doc).stringify())),
+    doc,
+  )
+}
+
+///|
 fn one(
   rule : @model.Rule,
   values~ : Array[Int64] = [-2L, -1L, 0L, 1L, 2L],

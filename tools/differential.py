@@ -16,16 +16,18 @@ RNG = random.Random(20261031)
 def random_term(names, depth=2):
     if depth == 0 or RNG.random() < .40:
         return RNG.choice(names + [-3, -2, -1, 0, 1, 2, 3, 10**12])
-    op = RNG.choice(["+", "-", "*", "/", "%", "abs", "neg"])
+    op = RNG.choice(["+", "-", "*", "/", "%", "abs", "neg", "indicator"])
+    if op == "indicator":
+        return [op, ["!=", RNG.choice(names), RNG.choice([-1, 0, 1])]]
     return [op, *[random_term(names, depth - 1) for _ in range(1 if op in ("abs", "neg") else 2)]]
 
 
 def random_rule(names, depth=2):
-    op = RNG.choice(["==", "!=", "<", "<=", ">", ">=", "all", "any", "not", "implies", "distinct", "table", "count"])
+    op = RNG.choice(["==", "!=", "<", "<=", ">", ">=", "all", "any", "not", "implies", "distinct", "table", "count", "holds"])
     if depth == 0:
         op = RNG.choice(["==", "!=", "<", "<=", ">", ">="])
-    if op in ("all", "any", "not", "implies"):
-        n = 1 if op == "not" else 2 if op == "implies" else RNG.randrange(4)
+    if op in ("all", "any", "not", "implies", "holds"):
+        n = 1 if op in ("not", "holds") else 2 if op == "implies" else RNG.randrange(4)
         return [op, *[random_rule(names, depth - 1) for _ in range(n)]]
     if op == "count":
         children = [random_rule(names, depth - 1) for _ in range(RNG.randrange(4))]

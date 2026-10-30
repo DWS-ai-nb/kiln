@@ -1,11 +1,18 @@
 import {
   "DWS-ai-nb/kiln/model",
+  "DWS-ai-nb/kiln/regression",
 }
 
 options(
   link: {
     "js": {
-      "exports": [ "solve_json", "verify_json", "minimize_json" ],
+      "exports": [
+        "solve_json",
+        "verify_json",
+        "minimize_json",
+        "compare_json",
+        "closest_json",
+      ],
       "format": "esm",
     },
   },

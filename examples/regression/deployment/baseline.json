@@ -1,0 +1,7 @@
+{
+  "runtime": 1,
+  "host": 1,
+  "storage": 1,
+  "persistent": 1,
+  "encrypted": 0
+}

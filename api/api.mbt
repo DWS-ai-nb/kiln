@@ -5,6 +5,50 @@ fn failure(message : String) -> String {
 }
 
 ///|
+pub fn compare_json(
+  before : String,
+  after : String,
+  budget : Int32,
+  max_solutions : Int32,
+) -> String {
+  match (@model.parse_document(before), @model.parse_document(after)) {
+    (Err(e), _) | (_, Err(e)) => failure(e)
+    (Ok(a), Ok(b)) =>
+      match
+        @regression.compare(
+          a.model,
+          b.model,
+          config=@model.options(budget~, max_solutions~),
+        ) {
+        Err(e) => failure(e)
+        Ok(r) => @regression.comparison_to_json(r).stringify()
+      }
+  }
+}
+
+///|
+pub fn closest_json(
+  before : String,
+  after : String,
+  baseline : String,
+  budget : Int32,
+) -> String {
+  match
+    (
+      @model.parse_document(before),
+      @model.parse_document(after),
+      @model.parse_assignment(baseline),
+    ) {
+    (Err(e), _, _) | (_, Err(e), _) | (_, _, Err(e)) => failure(e)
+    (Ok(a), Ok(b), Ok(env)) =>
+      match @regression.closest_change(a.model, b.model, env, budget~) {
+        Err(e) => failure(e)
+        Ok(r) => @regression.closest_to_json(r).stringify()
+      }
+  }
+}
+
+///|
 /// JavaScript/browser bridge. Budgets are validated by the model library.
 pub fn solve_json(
   source : String,

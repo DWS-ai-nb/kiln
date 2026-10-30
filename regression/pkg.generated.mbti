@@ -1,0 +1,73 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "DWS-ai-nb/kiln/regression"
+
+import {
+  "DWS-ai-nb/kiln/model",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn change_to_json(Change) -> Json
+
+pub fn closest_change(@model.Model, @model.Model, Map[String, Int64], budget? : Int32) -> Result[Closest, String]
+
+pub fn closest_to_json(Closest) -> Json
+
+pub fn compare(@model.Model, @model.Model, config? : @model.Options) -> Result[Comparison, String]
+
+pub fn comparison_to_json(Comparison) -> Json
+
+pub fn difference_model(@model.Model, @model.Model) -> Result[@model.Model, String]
+
+pub fn replay(@model.Model, @model.Model, Map[String, Int64]) -> Result[Change, String]
+
+// Errors
+
+// Types and methods
+pub(all) struct Change {
+  assignment : Map[String, Int64]
+  direction : Direction
+  before : @model.CheckReport
+  after : @model.CheckReport
+} derive(@debug.Debug)
+pub fn Change::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Closest {
+  change : Change?
+  distance : Int64?
+  minimal : Bool
+  stop : @model.Stop
+  stats : @model.Statistics
+} derive(@debug.Debug)
+pub fn Closest::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Comparison {
+  scope : Array[@model.Variable]
+  relation : Relation
+  changes : Array[Change]
+  complete : Bool
+  stop : @model.Stop
+  stats : @model.Statistics
+} derive(@debug.Debug)
+pub fn Comparison::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Direction {
+  RejectedByNew
+  AcceptedByNew
+} derive(Eq, @debug.Debug)
+pub fn Direction::equal(Self, Self) -> Bool
+pub fn Direction::not_equal(Self, Self) -> Bool
+pub fn Direction::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Relation {
+  Equivalent
+  Changed
+  Unknown
+} derive(Eq, @debug.Debug)
+pub fn Relation::equal(Self, Self) -> Bool
+pub fn Relation::not_equal(Self, Self) -> Bool
+pub fn Relation::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

@@ -24,6 +24,11 @@ def term(t, env):
         result = env[t]
     else:
         op, *args = t
+        if op == "indicator":
+            answer = rule(args[0], env)
+            if answer is None:
+                raise Undefined("undefined indicator")
+            return int(answer)
         nums = [term(a, env) for a in args]
         if op == "neg":
             result = -nums[0]
@@ -52,7 +57,9 @@ def term(t, env):
 def rule(r, env):
     """True/False/None; None is undefined, never silently false under not."""
     op, *args = r
-    if op in ("all", "any", "not", "implies", "count"):
+    if op in ("all", "any", "not", "implies", "count", "holds"):
+        if op == "holds":
+            return rule(args[0], env) is True
         if op == "implies":
             return rule(["any", ["not", args[0]], args[1]], env)
         if op == "not":
@@ -86,6 +93,8 @@ def term_names(t):
         return {t}
     if isinstance(t, int):
         return set()
+    if t[0] == "indicator":
+        return rule_names(t[1])
     return set().union(*(term_names(a) for a in t[1:]))
 
 
@@ -93,7 +102,7 @@ def rule_names(r):
     op, *args = r
     if op == "count":
         return set().union(*(rule_names(a) for a in args[2]))
-    if op in ("all", "any", "not", "implies"):
+    if op in ("all", "any", "not", "implies", "holds"):
         return set().union(*(rule_names(a) for a in args))
     if op == "table":
         args = args[0]

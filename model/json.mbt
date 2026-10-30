@@ -121,6 +121,12 @@ fn parse_term(
         raise InputError(path + ": empty term")
       }
       let op = text_value(a[0], path + "[0]")
+      if op == "indicator" {
+        if a.length() != 2 {
+          raise InputError(path + ": indicator expects one rule")
+        }
+        return Indicator(parse_rule(a[1], depth + 1, size, path + "[1]"))
+      }
       let arity = if op == "neg" || op == "abs" { 2 } else { 3 }
       if a.length() != arity {
         raise InputError(path + ": wrong term arity for " + op)
@@ -172,11 +178,12 @@ fn parse_rule(
     }
     return if op == "all" { All(rs) } else { Any(rs) }
   }
-  if op == "not" {
+  if op == "not" || op == "holds" {
     if a.length() != 2 {
       raise InputError(path + ": not expects one rule")
     }
-    return Not(parse_rule(a[1], depth + 1, size, path + "[1]"))
+    let child = parse_rule(a[1], depth + 1, size, path + "[1]")
+    return if op == "not" { Not(child) } else { Holds(child) }
   }
   if op == "distinct" {
     let ts : Array[Term] = []
@@ -321,6 +328,7 @@ pub fn parse_document(src : String) -> Result[Document, String] {
 ///|
 pub fn term_to_json(t : Term) -> Json {
   match t {
+    Indicator(r) => Json::array([Json::string("indicator"), rule_to_json(r)])
     Int(n) => Json::number(n.to_double())
     Var(n) => Json::string(n)
     Neg(a) => Json::array([Json::string("neg"), term_to_json(a)])
@@ -341,6 +349,7 @@ pub fn term_to_json(t : Term) -> Json {
 ///|
 pub fn rule_to_json(r : Rule) -> Json {
   match r {
+    Holds(r) => Json::array([Json::string("holds"), rule_to_json(r)])
     Eq(a, b) | Ne(a, b) | Lt(a, b) | Le(a, b) | Gt(a, b) | Ge(a, b) => {
       let op = match r {
         Eq(_, _) => "=="

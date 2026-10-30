@@ -11,6 +11,8 @@ pub(all) enum Term {
   Mod(Term, Term)
   Neg(Term)
   Abs(Term)
+  /// 1 for a true predicate, 0 for false; undefined remains undefined.
+  Indicator(Rule)
 } derive(Debug, Eq)
 
 ///|
@@ -25,6 +27,8 @@ pub(all) enum Rule {
   All(Array[Rule])
   Any(Array[Rule])
   Not(Rule)
+  /// Totalize acceptance: undefined arithmetic is rejection, never acceptance.
+  Holds(Rule)
   Implies(Rule, Rule)
   AllDifferent(Array[Term])
   Table(Array[Term], Array[Array[Int64]])

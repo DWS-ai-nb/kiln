@@ -121,6 +121,7 @@ pub(all) enum Rule {
   All(Array[Rule])
   Any(Array[Rule])
   Not(Rule)
+  Holds(Rule)
   Implies(Rule, Rule)
   AllDifferent(Array[Term])
   Table(Array[Term], Array[Array[Int64]])
@@ -166,6 +167,7 @@ pub(all) enum Term {
   Mod(Term, Term)
   Neg(Term)
   Abs(Term)
+  Indicator(Rule)
 } derive(Eq, @debug.Debug)
 pub fn Term::equal(Self, Self) -> Bool
 pub fn Term::not_equal(Self, Self) -> Bool

@@ -11,7 +11,11 @@ for await (const line of lines) {
     const req = JSON.parse(line);
     const source = typeof req.source === 'string' ? req.source : JSON.stringify(req.model);
     let output;
-    if (req.operation === 'verify') {
+    if (req.operation === 'compare') {
+      output = api.compare_json(source, JSON.stringify(req.after), req.budget ?? 1_000_000, req.limit ?? 100_000);
+    } else if (req.operation === 'closest') {
+      output = api.closest_json(source, JSON.stringify(req.after), JSON.stringify(req.baseline), req.budget ?? 1_000_000);
+    } else if (req.operation === 'verify') {
       output = api.verify_json(source, JSON.stringify(req.assignment));
     } else if (req.operation === 'minimize') {
       output = api.minimize_json(source, req.budget ?? 1_000_000);

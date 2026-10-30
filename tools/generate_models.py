@@ -82,6 +82,41 @@ def main():
     save("latin_square", "4阶拉丁方，首行固定。全异约束复用同一引擎，完整解集24个。",
          [var(n, range(1, 5)) for row in cells for n in row], rules)
 
+    # Version pairs use the same model format as standalone solving. They are
+    # intentionally original synthetic data, not claimed production adoption.
+    regression = ROOT.parent / "regression"
+    regression.mkdir(exist_ok=True)
+
+    def pair(name, before, after, baseline):
+        directory = regression / name
+        directory.mkdir(exist_ok=True)
+        for file, obj in [("before", before), ("after", after), ("baseline", baseline)]:
+            (directory / f"{file}.json").write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    pricing = json.loads((ROOT / "pricing.json").read_text(encoding="utf-8"))
+    before = json.loads(json.dumps(pricing))
+    before["rules"] = before["rules"][:-1]  # Bug: allow negative payable amounts.
+    pair("pricing", before, pricing, {"tier": 1, "subtotal": 50, "coupon": 0, "discount": 10})
+
+    deployment = json.loads((ROOT / "deployment.json").read_text(encoding="utf-8"))
+    after = json.loads(json.dumps(deployment))
+    after["description"] = "错误更新：把 JS/server 兼容组合从表中删除；其它条件不变。"
+    after["rules"][0]["assert"][2].remove([1, 1])
+    pair("deployment", deployment, after,
+         {"runtime": 1, "host": 1, "storage": 1, "persistent": 1, "encrypted": 0})
+
+    quota = json.loads((ROOT / "selection.json").read_text(encoding="utf-8"))
+    after = json.loads(json.dumps(quota))
+    after["description"] = "修改基础题配额为2；存在性与合法选集变化需要语义检查。"
+    after["rules"][2]["assert"][2] = 2
+    pair("quota", quota, after, dict(zip("ABCDEF", [0, 1, 1, 0, 1, 0])))
+
+    equivalent = json.loads((ROOT / "linear_system.json").read_text(encoding="utf-8"))
+    after = json.loads(json.dumps(equivalent))
+    after["rules"][0]["assert"] = ["==", ["+", "y", "x"], 9]
+    after["rules"][1]["assert"] = ["==", ["-", "y", "x"], -3]
+    pair("equivalent", equivalent, after, {"x": 6, "y": 3})
+
 
 if __name__ == "__main__":
     main()
