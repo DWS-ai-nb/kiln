@@ -1,0 +1,184 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "DWS-ai-nb/kiln/model"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn assignment_to_json(Map[String, Int64]) -> Json
+
+pub fn check_assignment(Model, Map[String, Int64]) -> Result[CheckReport, String]
+
+pub fn classify(Model, budget? : Int32) -> Result[Classification, String]
+
+pub fn document_to_json(Document) -> Json
+
+pub fn evaluate(Term, Map[String, Int64]) -> Result[Int64, String]
+
+pub fn explain(Model, budget_per_check? : Int32) -> Result[Conflict, String]
+
+pub fn minimize(Model, Term, budget? : Int32) -> Result[Optimization, String]
+
+pub fn negate_rule(Model, String) -> Result[Model, String]
+
+pub fn options(budget? : Int32, max_solutions? : Int32) -> Options
+
+pub fn parse_assignment(String) -> Result[Map[String, Int64], String]
+
+pub fn parse_document(String) -> Result[Document, String]
+
+pub fn rule_to_json(Rule) -> Json
+
+pub fn search_to_json(SearchResult) -> Json
+
+pub fn solve(Model, config? : Options) -> Result[SearchResult, String]
+
+pub fn statistics_to_json(Statistics) -> Json
+
+pub fn stop_name(Stop) -> String
+
+pub fn term_to_json(Term) -> Json
+
+pub fn validate(Model) -> Result[Unit, String]
+
+// Errors
+
+// Types and methods
+pub(all) struct CheckReport {
+  valid : Bool
+  violations : Array[String]
+} derive(Eq, @debug.Debug)
+pub fn CheckReport::equal(Self, Self) -> Bool
+pub fn CheckReport::not_equal(Self, Self) -> Bool
+pub fn CheckReport::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Classification {
+  Unsatisfiable
+  Unique(Map[String, Int64])
+  Multiple(Map[String, Int64], Map[String, Int64])
+  Unknown
+} derive(@debug.Debug)
+pub fn Classification::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Conflict {
+  rule_ids : Array[String]
+  irreducible : Bool
+  checks : Int32
+} derive(Eq, @debug.Debug)
+pub fn Conflict::equal(Self, Self) -> Bool
+pub fn Conflict::not_equal(Self, Self) -> Bool
+pub fn Conflict::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Document {
+  model : Model
+  objective : Term?
+} derive(Eq, @debug.Debug)
+pub fn Document::equal(Self, Self) -> Bool
+pub fn Document::not_equal(Self, Self) -> Bool
+pub fn Document::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Model {
+  variables : Array[Variable]
+  rules : Array[NamedRule]
+} derive(Eq, @debug.Debug)
+pub fn Model::equal(Self, Self) -> Bool
+pub fn Model::not_equal(Self, Self) -> Bool
+pub fn Model::to_repr(Self) -> @debug.Repr
+
+pub(all) struct NamedRule {
+  id : String
+  rule : Rule
+} derive(Eq, @debug.Debug)
+pub fn NamedRule::equal(Self, Self) -> Bool
+pub fn NamedRule::not_equal(Self, Self) -> Bool
+pub fn NamedRule::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Optimization {
+  assignment : Map[String, Int64]?
+  value : Int64?
+  optimal : Bool
+  stop : Stop
+  stats : Statistics
+} derive(@debug.Debug)
+pub fn Optimization::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Options {
+  budget : Int32
+  max_solutions : Int32
+} derive(Eq, @debug.Debug)
+pub fn Options::equal(Self, Self) -> Bool
+pub fn Options::not_equal(Self, Self) -> Bool
+pub fn Options::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Rule {
+  Eq(Term, Term)
+  Ne(Term, Term)
+  Lt(Term, Term)
+  Le(Term, Term)
+  Gt(Term, Term)
+  Ge(Term, Term)
+  All(Array[Rule])
+  Any(Array[Rule])
+  Not(Rule)
+  Implies(Rule, Rule)
+  AllDifferent(Array[Term])
+  Table(Array[Term], Array[Array[Int64]])
+  Count(Array[Rule], Int32, Int32)
+} derive(Eq, @debug.Debug)
+pub fn Rule::equal(Self, Self) -> Bool
+pub fn Rule::not_equal(Self, Self) -> Bool
+pub fn Rule::to_repr(Self) -> @debug.Repr
+
+pub(all) struct SearchResult {
+  solutions : Array[Map[String, Int64]]
+  stop : Stop
+  stats : Statistics
+} derive(@debug.Debug)
+pub fn SearchResult::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Statistics {
+  probes : Int32
+  nodes : Int32
+  pruned : Int32
+  solutions_seen : Int32
+} derive(Eq, @debug.Debug)
+pub fn Statistics::equal(Self, Self) -> Bool
+pub fn Statistics::not_equal(Self, Self) -> Bool
+pub fn Statistics::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Stop {
+  Exhausted
+  SolutionLimit
+  BudgetLimit
+} derive(Eq, @debug.Debug)
+pub fn Stop::equal(Self, Self) -> Bool
+pub fn Stop::not_equal(Self, Self) -> Bool
+pub fn Stop::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Term {
+  Int(Int64)
+  Var(String)
+  Add(Term, Term)
+  Sub(Term, Term)
+  Mul(Term, Term)
+  Div(Term, Term)
+  Mod(Term, Term)
+  Neg(Term)
+  Abs(Term)
+} derive(Eq, @debug.Debug)
+pub fn Term::equal(Self, Self) -> Bool
+pub fn Term::not_equal(Self, Self) -> Bool
+pub fn Term::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Variable {
+  name : String
+  values : Array[Int64]
+} derive(Eq, @debug.Debug)
+pub fn Variable::equal(Self, Self) -> Bool
+pub fn Variable::not_equal(Self, Self) -> Bool
+pub fn Variable::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
