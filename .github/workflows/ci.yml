@@ -2,82 +2,82 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  MOONBIT_INSTALL_VERSION: 0.10.17+093cb8f9c
+
 jobs:
-  test:
-    name: test (${{ matrix.target }})
+  backends:
+    name: check-build-test (${{ matrix.target }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # wasm-gc and js are the two backends the golden parity tests pin.
-        # native needs a C toolchain and is run separately below.
-        target: [wasm-gc, js]
+        target: [wasm-gc, wasm, js, native]
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install MoonBit
+      - uses: actions/checkout@v7
+      - name: Install fixed MoonBit compiler and matching core
         run: |
-          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-
-      - name: Show toolchain
-        run: moon version --all
-
-      - name: Update package index
-        run: moon update
-
-      - name: Check (all targets, warnings are errors)
-        run: moon check --target all --deny-warn
-
-      - name: Test on ${{ matrix.target }}
-        run: moon test --target ${{ matrix.target }}
-
-      - name: Formatting is canonical
+      - run: moon version --all
+      - run: moon update
+      - run: moon check --target ${{ matrix.target }} --deny-warn
+      - run: moon build --target ${{ matrix.target }} --deny-warn
+      - run: moon test --target ${{ matrix.target }} --deny-warn
+      - run: moon run examples/embedding --target ${{ matrix.target }} --deny-warn
+      - name: Formatting and public interface are committed
         run: |
-          moon fmt
+          moon fmt --check
+          moon info
           git diff --exit-code
 
-  cross-language:
-    name: independent verifier (python)
+  independent-oracles:
+    name: independent solution sets, regressions and CLI
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install MoonBit
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Install fixed MoonBit compiler and matching core
         run: |
-          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
       - run: moon update
-      - name: Generate two papers
+      - run: moon build --target js --deny-warn
+      - run: moon build api --target js --deny-warn
+      - run: python tools/differential.py --cases 1600
+      - run: python tools/regression_differential.py --cases 800
+      - run: python tools/check_cli.py
+      - name: Fixtures are reproducible
         run: |
-          moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln --count 8 --seed 3 --out /tmp/q
-          moon run cmd/cli --target js -- gen --schema examples/rational.kiln --count 8 --seed 3 --out /tmp/r
-      - name: Re-check them without MoonBit
+          python tools/generate_models.py
+          git diff --exit-code examples
+      - name: Legacy worksheet compatibility
         run: |
-          python3 tools/verify_reference.py /tmp/q/paper.json
-          python3 tools/verify_reference.py /tmp/r/paper.json
-      - name: The MoonBit verifier agrees
-        run: |
-          moon run cmd/cli --target js -- verify --file /tmp/q/paper.json
-          moon run cmd/cli --target js -- verify --file /tmp/r/paper.json
-
-  native:
-    name: test (native)
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install MoonBit
-        run: |
-          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-      - run: moon update
-      - name: Test on native
-        run: moon test --target native
+          moon run cmd/cli --target js -- gen --schema examples/quadratic.kiln --count 8 --seed 3 --out work/legacy-q
+          moon run cmd/cli --target js -- gen --schema examples/rational.kiln --count 8 --seed 3 --out work/legacy-r
+          python tools/verify_reference.py work/legacy-q/paper.json
+          python tools/verify_reference.py work/legacy-r/paper.json
+          moon run cmd/cli --target js -- verify --file work/legacy-q/paper.json
+          moon run cmd/cli --target js -- verify --file work/legacy-r/paper.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: independent-evidence
+          path: |
+            work/differential
+            work/regression-differential
