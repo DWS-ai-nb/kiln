@@ -7,3 +7,5 @@ target
 out/
 out-*/
 work/
+__pycache__/
+*.pyc

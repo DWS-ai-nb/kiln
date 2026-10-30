@@ -1,0 +1,264 @@
+{
+  "format": "kiln.model/1",
+  "description": "4阶拉丁方，首行固定。全异约束复用同一引擎，完整解集24个。",
+  "variables": [
+    {
+      "name": "r0c0",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r0c1",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r0c2",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r0c3",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r1c0",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r1c1",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r1c2",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r1c3",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r2c0",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r2c1",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r2c2",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r2c3",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r3c0",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r3c1",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r3c2",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "r3c3",
+      "domain": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "row-0",
+      "assert": [
+        "distinct",
+        "r0c0",
+        "r0c1",
+        "r0c2",
+        "r0c3"
+      ]
+    },
+    {
+      "id": "row-1",
+      "assert": [
+        "distinct",
+        "r1c0",
+        "r1c1",
+        "r1c2",
+        "r1c3"
+      ]
+    },
+    {
+      "id": "row-2",
+      "assert": [
+        "distinct",
+        "r2c0",
+        "r2c1",
+        "r2c2",
+        "r2c3"
+      ]
+    },
+    {
+      "id": "row-3",
+      "assert": [
+        "distinct",
+        "r3c0",
+        "r3c1",
+        "r3c2",
+        "r3c3"
+      ]
+    },
+    {
+      "id": "col-0",
+      "assert": [
+        "distinct",
+        "r0c0",
+        "r1c0",
+        "r2c0",
+        "r3c0"
+      ]
+    },
+    {
+      "id": "col-1",
+      "assert": [
+        "distinct",
+        "r0c1",
+        "r1c1",
+        "r2c1",
+        "r3c1"
+      ]
+    },
+    {
+      "id": "col-2",
+      "assert": [
+        "distinct",
+        "r0c2",
+        "r1c2",
+        "r2c2",
+        "r3c2"
+      ]
+    },
+    {
+      "id": "col-3",
+      "assert": [
+        "distinct",
+        "r0c3",
+        "r1c3",
+        "r2c3",
+        "r3c3"
+      ]
+    },
+    {
+      "id": "given-0",
+      "assert": [
+        "==",
+        "r0c0",
+        1
+      ]
+    },
+    {
+      "id": "given-1",
+      "assert": [
+        "==",
+        "r0c1",
+        2
+      ]
+    },
+    {
+      "id": "given-2",
+      "assert": [
+        "==",
+        "r0c2",
+        3
+      ]
+    },
+    {
+      "id": "given-3",
+      "assert": [
+        "==",
+        "r0c3",
+        4
+      ]
+    }
+  ]
+}

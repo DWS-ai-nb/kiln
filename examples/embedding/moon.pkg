@@ -1,0 +1,5 @@
+import {
+  "DWS-ai-nb/kiln/model",
+}
+
+pkgtype(kind: "executable")
