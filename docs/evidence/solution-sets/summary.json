@@ -1,0 +1,12 @@
+{
+  "seed": 20261031,
+  "models": 1607,
+  "random_models": 1600,
+  "complete_solution_sets_matched": 1607,
+  "witness_checks": 1295,
+  "interrupted_checks": 230,
+  "optimization_checks": 403,
+  "satisfiable_models": 680,
+  "elapsed_seconds": 0.775,
+  "method": "independent Python full-assignment evaluator and fixed-order DFS vs compiled MoonBit MRV/partial evaluator"
+}

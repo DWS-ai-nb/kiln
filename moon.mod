@@ -11,7 +11,7 @@
 
 name = "DWS-ai-nb/kiln"
 
-version = "0.1.0"
+version = "0.2.0"
 
 readme = "README.md"
 
@@ -20,16 +20,16 @@ repository = "https://github.com/DWS-ai-nb/kiln"
 license = "Apache-2.0"
 
 keywords = [
-  "education",
-  "assessment",
+  "regression-testing",
+  "counterexample",
   "constraint",
   "verification",
-  "generator",
+  "semantic-diff",
 ]
 
 preferred_target = "wasm"
 
-description = "Well-posed problem generation with machine-checkable answer certificates"
+description = "Finite-domain arithmetic rule regression, replayable change witnesses and exact minimum-field counterexamples"
 
 import {
   "moonbitlang/x@0.5.6",

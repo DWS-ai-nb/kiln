@@ -1,0 +1,10 @@
+{
+  "seed": 20261031,
+  "model_pairs": 804,
+  "complete_differences_matched": 804,
+  "minimum_hamming_checks": 270,
+  "bounded_comparison_checks": 74,
+  "equivalent_pairs": 382,
+  "elapsed_seconds": 0.521,
+  "oracle": "symmetric difference of independently enumerated old/new accepted assignment sets"
+}

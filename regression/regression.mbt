@@ -120,7 +120,9 @@ pub fn difference_model(
     rules: [
       {
         id: "semantic-difference",
-        rule: Any([All([old, Not(new)]), All([Not(old), new])]),
+        // Inequality of two total 0/1 acceptances is XOR. Each original model
+        // occurs once, avoiding duplicate AST size and validation work.
+        rule: Ne(Indicator(old), Indicator(new)),
       },
     ],
   }

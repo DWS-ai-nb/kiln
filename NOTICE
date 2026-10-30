@@ -24,9 +24,20 @@ acknowledged as prior art or as algorithmic inspiration.
    John Hughes. Not reimplemented here: kiln uses MoonBit's standard
    library (@quickcheck) where property tests are appropriate.
 
-Ecosystem neighbours that kiln deliberately does not reimplement:
+5. Finite-domain regression (0.2)
+   Backtracking, minimum remaining values, forward checking, symmetric set
+   difference, Hamming distance and deletion-based conflict checks are standard
+   techniques. The code is an original implementation, not a new algorithm claim.
+
+Ecosystem neighbours (overlap and boundaries are documented in docs/ECOSYSTEM.md):
    moonbit-community/maxima, CAIMEOX/symbit  — computer algebra
    moonbitlang/typst, moonbitlang/pagelayout — typesetting / layout
    cn-xjr/moonplan, sgy1023-crt/cassowary    — constraint solving
+   mjfmjf879/moonbit_constraint             — finite-domain constraints
+   CJR-ai-nb/evowitness                     — structural contract witnesses
+   hutingyu-nuist/moonpolicyproof            — network policy semantic differences
+   LF-ai-nb/caseweave                       — constrained combinatorial tests
 
-Runtime dependencies: moonbitlang/x (file IO only).
+Runtime dependencies: moonbitlang/core; moonbitlang/x (CLI IO and exit only).
+AI assisted the new design, implementation, testing and technical documentation.
+No personal application/contact information is part of this repository.
