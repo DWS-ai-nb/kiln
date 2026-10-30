@@ -1,0 +1,12 @@
+import {
+  "DWS-ai-nb/kiln/model",
+}
+
+options(
+  link: {
+    "js": {
+      "exports": [ "solve_json", "verify_json", "minimize_json" ],
+      "format": "esm",
+    },
+  },
+)

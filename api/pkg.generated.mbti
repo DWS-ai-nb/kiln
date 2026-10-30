@@ -1,0 +1,17 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "DWS-ai-nb/kiln/api"
+
+// Values
+pub fn minimize_json(String, Int32) -> String
+
+pub fn solve_json(String, Int32, Int32) -> String
+
+pub fn verify_json(String, String) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
