@@ -66,6 +66,7 @@ jobs:
       - run: python tools/check_cli.py
       - run: node tools/check_js_api.mjs
       - run: python tools/check_reference.py
+      - run: python tools/deep_semantics.py
       - name: Fixtures are reproducible
         run: |
           python tools/generate_models.py
@@ -84,3 +85,4 @@ jobs:
           path: |
             work/differential
             work/regression-differential
+            work/deep-semantics

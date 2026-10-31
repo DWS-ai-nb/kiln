@@ -11,6 +11,8 @@
 | 预算行为 | 解集对照包含 243 次中断，变更对照包含 82 次中断；检查预算计数、部分见证及 unknown 结论 |
 | CLI 集成 | `python tools/check_cli.py`：28 次真正启动编译后 CLI，核验成功/差异/非法输入/预算不足退出码及篡改拒绝 |
 | 固定工具链 | CI 用 `MOONBIT_INSTALL_VERSION=0.10.17+093cb8f9c` 安装二进制与匹配 core；本地读取官方 core 包核对 JSON 解析器源码哈希一致 |
+| 第二套独立解释器 | `python tools/deep_semantics.py`：10000 个深层模型、1000 对差异及 Hamming 最优值、1000 次一般优化、500 次预算/限解检查；使用另一固定种子和全笛卡尔积，不导入第一套参考解释器 |
+| JS ABI 与参考边界 | `node tools/check_js_api.mjs` 的 102 项实际 JS 类型/范围检查；`python tools/check_reference.py` 的 16 项严格整数与 JSON 边界检查 |
 
 原始每模型记录与摘要由脚本写入 `work/differential/` 和 `work/regression-differential/`；CI 将两者作为 `independent-evidence` artifact 上传。仓库中保存一次实测的原始记录至 `docs/evidence/`，每次 CI 会重新计算，而不是只读取静态结果。
 
