@@ -127,6 +127,18 @@ pub(all) struct Conflict {
 const LIMIT : Int64 = 1000000000000L
 
 ///|
+/// Typed distinction for callers such as CLI/CI; incomplete search is not an
+/// invalid-input error. The older explain() string-error API remains available.
+pub(all) enum Explanation {
+  Contradiction(Conflict)
+  Satisfiable
+  Incomplete
+} derive(Debug)
+
+///|
+pub extend Explanation with @debug.Debug::{to_repr}
+
+///|
 pub extend Term with @debug.Debug::{to_repr}
 
 ///|

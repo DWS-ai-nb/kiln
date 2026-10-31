@@ -8,7 +8,7 @@ from pathlib import Path
 import random
 import subprocess
 import time
-from differential import random_model, random_rule
+from differential import random_model, random_rule, partial_semantics_models
 from model_reference import solutions, verify
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -41,6 +41,10 @@ def main():
         after = json.loads((p / "after.json").read_text(encoding="utf-8"))
         baseline = json.loads((p / "baseline.json").read_text(encoding="utf-8"))
         pairs.append((p.name, before, after, baseline))
+    for name, before in partial_semantics_models():
+        after = copy.deepcopy(before)
+        after["rules"] = [{"id": "reject-all", "assert": ["any"]}]
+        pairs.append((name, before, after, {"x": 1}))
     for i in range(args.cases):
         before = random_model()
         after = copy.deepcopy(before)

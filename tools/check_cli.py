@@ -34,6 +34,7 @@ def main():
     assert core["irreducible"] and set(core["rule_ids"]) == {
         "two-algebra", "shared-stem-a-b", "shared-stem-a-c", "require-a"}
     assert not run("model", ["solve", selection, "--budget", "0"], 3)["complete"]
+    assert run("model", ["explain", unsat, "--budget", "0"], 3)["stop"] == "budget_limit"
     assert run("model", ["solve", selection, "--limit", "1"], 3)["stop"] == "solution_limit"
     for args in [["solve", selection, "--budget", "typo"], ["solve", selection, "--limit", "0"],
                  ["solve", selection, "--budget", "1", "--budget", "2"],

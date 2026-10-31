@@ -7,6 +7,27 @@ fn[T] must(r : Result[T, String]) -> T {
 }
 
 ///|
+test "nested acceptance observes undefined atoms without losing change witnesses" {
+  let atoms : Array[@model.Rule] = [
+    AllDifferent([Int(1L), Int(1L), Div(Int(1L), Var("x"))]),
+    Table([Int(1L), Div(Int(1L), Var("x"))], [[2L, 3L]]),
+    Count([Eq(Int(1L), Int(1L)), Eq(Div(Int(1L), Var("x")), Int(1L))], 0, 0),
+  ]
+  for atom in atoms {
+    let before = model(Not(Holds(Not(atom))), values=[0L, 1L])
+    let after = model(Any([]), values=[0L, 1L])
+    let r = must(@regression.compare(before, after))
+    assert_eq(r.relation, @regression.Changed)
+    assert_true(r.complete)
+    assert_eq(r.changes.length(), 1)
+    assert_eq(r.changes[0].assignment.get("x"), Some(0L))
+    let closest = must(@regression.closest_change(before, after, { "x": 1L }))
+    assert_eq(closest.distance, Some(1L))
+    assert_true(closest.minimal)
+  }
+}
+
+///|
 test "large Hamming objectives stay inside the expression-depth limit" {
   let variables : Array[@model.Variable] = []
   let baseline : Map[String, Int64] = Map([])

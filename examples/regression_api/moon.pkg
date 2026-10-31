@@ -1,0 +1,6 @@
+import {
+  "DWS-ai-nb/kiln/model",
+  "DWS-ai-nb/kiln/regression",
+}
+
+pkgtype(kind: "executable")

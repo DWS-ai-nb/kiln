@@ -219,18 +219,18 @@ pub fn minimize(
 /// Explain a proved contradiction using deletion checks. Each check has the
 /// supplied budget. Incomplete checks preserve a known-unsatisfiable superset
 /// and set irreducible=false. Domains are implicit constraints and never removed.
-pub fn explain(
+pub fn explain_result(
   model : Model,
   budget_per_check~ : Int32 = 100000,
-) -> Result[Conflict, String] {
+) -> Result[Explanation, String] {
   match solve(model, config=options(budget=budget_per_check, max_solutions=1)) {
     Err(e) => return Err(e)
     Ok(r) => {
       if !r.solutions.is_empty() {
-        return Err("model is satisfiable")
+        return Ok(Satisfiable)
       }
       if r.stop != Exhausted {
-        return Err("unsatisfiability is unknown: budget exhausted")
+        return Ok(Incomplete)
       }
     }
   }
@@ -261,5 +261,26 @@ pub fn explain(
         }
     }
   }
-  Ok({ rule_ids: current.map(r => r.id), irreducible: complete, checks, })
+  Ok(
+    Contradiction({
+      rule_ids: current.map(r => r.id),
+      irreducible: complete,
+      checks,
+    }),
+  )
+}
+
+///|
+/// Compatibility API. Use explain_result to distinguish budget exhaustion from
+/// satisfiability and malformed inputs without inspecting an error string.
+pub fn explain(
+  model : Model,
+  budget_per_check~ : Int32 = 100000,
+) -> Result[Conflict, String] {
+  match explain_result(model, budget_per_check~) {
+    Err(e) => Err(e)
+    Ok(Contradiction(c)) => Ok(c)
+    Ok(Satisfiable) => Err("model is satisfiable")
+    Ok(Incomplete) => Err("unsatisfiability is unknown: budget exhausted")
+  }
 }

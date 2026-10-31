@@ -18,6 +18,8 @@ pub fn evaluate(Term, Map[String, Int64]) -> Result[Int64, String]
 
 pub fn explain(Model, budget_per_check? : Int32) -> Result[Conflict, String]
 
+pub fn explain_result(Model, budget_per_check? : Int32) -> Result[Explanation, String]
+
 pub fn minimize(Model, Term, budget? : Int32) -> Result[Optimization, String]
 
 pub fn negate_rule(Model, String) -> Result[Model, String]
@@ -77,6 +79,13 @@ pub(all) struct Document {
 pub fn Document::equal(Self, Self) -> Bool
 pub fn Document::not_equal(Self, Self) -> Bool
 pub fn Document::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Explanation {
+  Contradiction(Conflict)
+  Satisfiable
+  Incomplete
+} derive(@debug.Debug)
+pub fn Explanation::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Model {
   variables : Array[Variable]

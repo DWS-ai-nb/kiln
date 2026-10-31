@@ -199,7 +199,23 @@ fn main {
       }
     }
     "explain" => {
-      let c = must(@csp.explain(model, budget_per_check=budget))
+      let c = match must(@csp.explain_result(model, budget_per_check=budget)) {
+        Contradiction(c) => c
+        Satisfiable => {
+          die("model is satisfiable")
+          return
+        }
+        Incomplete => {
+          let j : Json = {
+            "complete": false,
+            "stop": "budget_limit",
+            "reason": "unsatisfiability is unknown",
+          }
+          println(j.stringify())
+          @sys.exit(3)
+          return
+        }
+      }
       let j : Json = {
         "rule_ids": c.rule_ids,
         "irreducible": c.irreducible,

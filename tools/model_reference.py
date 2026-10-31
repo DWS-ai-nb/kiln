@@ -17,6 +17,23 @@ class Undefined(Exception):
     pass
 
 
+def strict_json(text):
+    """Match the lexical-integer and duplicate-key input boundary independently."""
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("duplicate JSON key: " + key)
+            result[key] = value
+        return result
+
+    def reject_float(value):
+        raise ValueError("expected integer spelling: " + value)
+
+    return json.loads(text, object_pairs_hook=pairs, parse_float=reject_float,
+                      parse_constant=reject_float)
+
+
 def term(t, env):
     if isinstance(t, int):
         result = t
@@ -111,7 +128,9 @@ def rule_names(r):
 
 def verify(doc, env):
     variables = doc["variables"]
-    return (set(env) == {v["name"] for v in variables}
+    return (type(env) is dict
+            and all(type(v) is int and abs(v) <= LIMIT for v in env.values())
+            and set(env) == {v["name"] for v in variables}
             and all(env[v["name"]] in v["domain"] for v in variables)
             and all(rule(r["assert"], env) is True for r in doc["rules"]))
 
@@ -140,13 +159,15 @@ def solutions(doc):
 def main():
     if len(sys.argv) != 3:
         raise SystemExit("usage: python tools/model_reference.py model.json result.json")
-    doc = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8-sig"))
-    result = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8-sig"))
+    doc = strict_json(Path(sys.argv[1]).read_text(encoding="utf-8-sig"))
+    result = strict_json(Path(sys.argv[2]).read_text(encoding="utf-8-sig"))
     # Embedded model is authoritative for a counterexample task. This is a
     # consistency checker, not authentication of the submitted model's origin.
     if result.get("operation") == "counterexample":
         doc = result["model"]
     actual = result["solutions"]
+    if type(result["complete"]) is not bool or type(actual) is not list:
+        raise SystemExit("INVALID result metadata")
     if not all(verify(doc, a) for a in actual):
         raise SystemExit("INVALID witness")
     if result["complete"]:

@@ -162,12 +162,12 @@ fn judge(r : Rule, env : Map[String, Int64]) -> Result[Bool?, String] {
       match error {
         Some(e) => Err(e)
         None =>
-          if duplicate {
-            Ok(Some(false))
-          } else if pending {
+          // A later undefined term changes this atom from false to undefined.
+          // Holds/Not can observe that change, so false is not stable yet.
+          if pending {
             Ok(None)
           } else {
-            Ok(Some(true))
+            Ok(Some(!duplicate))
           }
       }
     }
@@ -207,15 +207,10 @@ fn judge(r : Rule, env : Map[String, Int64]) -> Result[Bool?, String] {
           break
         }
       }
-      if !supported {
-        Ok(Some(false))
-      } else if pending {
+      if pending {
         Ok(None)
       } else {
-        match error {
-          Some(e) => Err(e)
-          None => Ok(Some(true))
-        }
+        Ok(Some(supported))
       }
     }
     Count(rs, lo, hi) => {
@@ -233,18 +228,12 @@ fn judge(r : Rule, env : Map[String, Int64]) -> Result[Bool?, String] {
       if error is Some(e) {
         return Err(e)
       }
-      // Undefined counted predicates invalidate the count at full assignment.
+      // A pending predicate may become undefined, which is observable through
+      // Holds. Even an already exceeded count is not a stable false result.
       if pending > 0 {
-        if yes > hi {
-          Ok(Some(false))
-        } else {
-          Ok(None)
-        }
+        Ok(None)
       } else {
-        match error {
-          Some(e) => Err(e)
-          None => Ok(Some(yes >= lo && yes <= hi))
-        }
+        Ok(Some(yes >= lo && yes <= hi))
       }
     }
   }

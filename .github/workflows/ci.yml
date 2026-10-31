@@ -36,6 +36,7 @@ jobs:
       - run: moon build --target ${{ matrix.target }} --deny-warn
       - run: moon test --target ${{ matrix.target }} --deny-warn
       - run: moon run examples/embedding --target ${{ matrix.target }} --deny-warn
+      - run: moon run examples/regression_api --target ${{ matrix.target }} --deny-warn
       - name: Formatting and public interface are committed
         run: |
           moon fmt --check
@@ -63,6 +64,8 @@ jobs:
       - run: python tools/differential.py --cases 1600
       - run: python tools/regression_differential.py --cases 800
       - run: python tools/check_cli.py
+      - run: node tools/check_js_api.mjs
+      - run: python tools/check_reference.py
       - name: Fixtures are reproducible
         run: |
           python tools/generate_models.py

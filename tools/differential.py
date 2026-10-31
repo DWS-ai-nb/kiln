@@ -7,6 +7,7 @@ from pathlib import Path
 import random
 import subprocess
 import time
+import itertools
 from model_reference import solutions, verify, term, Undefined
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,7 +23,7 @@ def random_term(names, depth=2):
     return [op, *[random_term(names, depth - 1) for _ in range(1 if op in ("abs", "neg") else 2)]]
 
 
-def random_rule(names, depth=2):
+def random_rule(names, depth=4):
     op = RNG.choice(["==", "!=", "<", "<=", ">", ">=", "all", "any", "not", "implies", "distinct", "table", "count", "holds"])
     if depth == 0:
         op = RNG.choice(["==", "!=", "<", "<=", ">", ">="])
@@ -49,6 +50,27 @@ def random_model():
             "objective": random_term(names)}
 
 
+def partial_semantics_models():
+    """93 adversarial nestings; false versus undefined is observable by holds."""
+    atoms = [
+        ["distinct", 1, 1, ["/", 1, "x"]],
+        ["table", [1, ["/", 1, "x"]], [[2, 3]]],
+        ["count", 0, 0, [["==", 1, 1], ["==", ["/", 1, "x"], 1]]],
+    ]
+    models = []
+    for index, atom in enumerate(atoms):
+        for depth in range(5):
+            for wrappers in itertools.product(("not", "holds"), repeat=depth):
+                r = atom
+                for op in wrappers:
+                    r = [op, r]
+                label = f"partial-{index}-{depth}-{''.join(w[0] for w in wrappers)}"
+                models.append((label, {"format": "kiln.model/1",
+                    "variables": [{"name": "x", "domain": [-1, 0, 1]}],
+                    "rules": [{"id": "adversarial", "assert": r}], "objective": "x"}))
+    return models
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cases", type=int, default=800)
@@ -72,6 +94,7 @@ def main():
     canonical = lambda assignments: {tuple(sorted(a.items())) for a in assignments}
     models = [(p.stem, json.loads(p.read_text(encoding="utf-8")))
               for p in sorted((ROOT / "examples/models").glob("*.json"))]
+    models += partial_semantics_models()
     models += [(f"random-{i:04}", random_model()) for i in range(args.cases)]
     raw = []
     start = time.perf_counter()

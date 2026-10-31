@@ -7,6 +7,34 @@ fn[T] must(r : Result[T, String]) -> T {
 }
 
 ///|
+test "pending atoms cannot become stable false before arithmetic is defined" {
+  let atoms : Array[@model.Rule] = [
+    AllDifferent([Int(1L), Int(1L), Div(Int(1L), Var("x"))]),
+    Table([Int(1L), Div(Int(1L), Var("x"))], [[2L, 3L]]),
+    Count([Eq(Int(1L), Int(1L)), Eq(Div(Int(1L), Var("x")), Int(1L))], 0, 0),
+  ]
+  for atom in atoms {
+    let m = one(Not(Holds(Not(atom))), values=[0L, 1L])
+    assert_true(must(@model.check_assignment(m, { "x": 0L })).valid)
+    let r = must(@model.solve(m))
+    assert_eq(r.stop, @model.Exhausted)
+    assert_eq(r.solutions.length(), 1)
+    assert_eq(r.solutions[0].get("x"), Some(0L))
+  }
+}
+
+///|
+test "typed conflict results distinguish incomplete search from invalid input" {
+  let impossible = one(Eq(Var("x"), Int(99L)))
+  assert_true(
+    must(@model.explain_result(impossible, budget_per_check=0)) is Incomplete,
+  )
+  assert_true(must(@model.explain_result(impossible)) is Contradiction(_))
+  assert_true(must(@model.explain_result(one(All([])))) is Satisfiable)
+  assert_true(@model.explain_result(impossible, budget_per_check=-1) is Err(_))
+}
+
+///|
 test "acceptance totalization and indicators preserve undefined semantics" {
   let bad : @model.Rule = Eq(Div(Int(1L), Int(0L)), Int(1L))
   assert_eq(count(one(Holds(bad))), 0)
