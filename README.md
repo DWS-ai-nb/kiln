@@ -10,14 +10,14 @@
 
 ## 版本与已有基础
 
-0.2.0 是 [原版 kiln 0.1](docs/LEGACY_V0_1.md) 被退回后的实质重建，沿用同一仓库并保留历史。旧版是两类方程的命题工具；新工作是独立的 `model/`、`regression/`、CLI、JS 桥及验证资产，**不调用旧题族、旧有理数或旧组卷代码**。旧版 69 项测试保留，不能计为本次新增测试。逐项回应见 [REVIEW_RESPONSE](docs/REVIEW_RESPONSE.md)。
+0.2.1 是 [原版 kiln 0.1](docs/LEGACY_V0_1.md) 被退回后的实质重建，沿用同一仓库并保留历史。旧版是两类方程的命题工具；新工作是独立的 `model/`、`regression/`、CLI、JS 桥及验证资产，**不调用旧题族、旧有理数或旧组卷代码**。旧版 69 项测试保留，不能计为本次新增测试。逐项回应见 [REVIEW_RESPONSE](docs/REVIEW_RESPONSE.md)。
 
 ## 安装与最小使用
 
 固定验证工具链：`moonc 0.10.17+093cb8f9c` 及其匹配 core。源码示例和测试只需 MoonBit；独立对照额外使用 Node.js 22+、Python 3.12，无第三方 Python 包。
 
 ```sh
-moon add DWS-ai-nb/kiln@0.2.0
+moon add DWS-ai-nb/kiln@0.2.1
 ```
 
 在调用方的 `moon.pkg` 中导入需要的包：
@@ -29,7 +29,7 @@ import {
 }
 ```
 
-可运行的纯库示例：`moon run examples/embedding`，输出 `unique: {"x":6,"y":3}` 和 `verified: true`。不依赖 CLI、Python 或网络求解服务。JS 导出接口在 `api/`。
+业务规则纯库示例：`moon run examples/regression_api`，直接调用语义对比、最近反例与回放，输出 `changes=1, minimum_fields=1, replay=true`。另有 `moon run examples/embedding` 演示基础求解。两者都不依赖 CLI、Python 或网络求解服务。JS 导出接口在 `api/`，对实际 JS 参数校验类型、整数性和范围后才转换。
 
 ## 三个完整场景
 
@@ -145,8 +145,9 @@ python tools/regression_differential.py --cases 800
 python tools/check_cli.py
 ```
 
-- 106 项 MoonBit 测试（原版 69、新增 37），覆盖语义、错误输入、预算、唯一性、精确最小化、双向差异、原域与并集、无定义算术、回放及 100 字段目标。
-- 独立 Python 解释器使用任意精度整数后施加范围契约，以固定顺序 DFS、仅在规则相关变量全绑定后求值；不复用 MoonBit 部分求值或 MRV。1607 个完整解集、804 对完整差异集，以及最近见证和预算测试可复现。
+- 110 项 MoonBit 测试（原版 69、新增 41），覆盖语义、错误输入、预算、唯一性、精确最小化、双向差异、原域与并集、无定义算术、回放及 100 字段目标。
+- 独立 Python 解释器使用任意精度整数后施加范围契约，以固定顺序 DFS、仅在规则相关变量全绑定后求值；不复用 MoonBit 部分求值或 MRV。1700 个完整解集、897 对完整差异集，以及最近见证和预算测试可复现；其中含 93 个深层否定/总化组合的针对性模型，随机规则深度也提高到 4 层。
+- 102 个实际 JS ABI 边界检查、16 个独立参考输入边界检查、28 次 CLI 进程检查进入 CI；解释冲突的预算未知通过 typed `explain_result` 区分，CLI 退出 3。
 - CI 固定编译器与匹配 core，对 wasm-gc/wasm/js/native 强制检查、构建和测试，额外检查 CLI 真实退出码、公共接口漂移、原版跨语言回归。Windows 本机缺 MSVC，native 运行结果以 Linux CI 为准。
 - [EVIDENCE](docs/EVIDENCE.md) 给出数据入口和实测范围；工作预算是候选探测次数，**不是秒数、内存或指令总量上限**。
 

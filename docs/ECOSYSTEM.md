@@ -7,6 +7,7 @@
 | [mjfmjf879/moonbit-constraint](https://github.com/mjfmjf879/moonbit-constraint) | 有限域、约束组合、传播、MRV、优化、冲突报告、配置与调度 | 通用求解内核确实重叠；kiln 不以 CSP 从零实现为立项价值，交付两版跨字段算术接受集差异、原域扩缩及相对基线最少改动字段的反例 |
 | [cn-xjr/MoonPlan](https://github.com/cn-xjr/MoonPlan) | 可解释有限域约束与排程工具 | 不宣称补齐一般排程生态，也不复制领域模板；选题仅是数据案例 |
 | [CJR-ai-nb/evowitness](https://github.com/CJR-ai-nb/evowitness) | 结构契约接受集兼容分析、最小 JSON 反例与回放；README 当前明确不支持联合/条件约束 | 目标存在接受集对比重叠；kiln 输入同名有限整数变量上的跨字段算术、乘除取模、布尔、全异/表/计数约束，不做其开放对象、嵌套字段、引用、字符串或列表契约 |
+| [123123213weqw/moon-policyforge](https://github.com/123123213weqw/moon-policyforge) | 跨字段算术规则求值、按 ID 的结构 diff、对调用方给定 facts 的 snapshot/compare；[API](https://github.com/123123213weqw/moon-policyforge/blob/main/docs/api.md)与[边界说明](https://github.com/123123213weqw/moon-policyforge/blob/main/docs/boundaries.md)明确输入 facts 由调用方提供 | 规则语言与决定比较确实相邻；kiln 自动搜索未提供的区分输入，比较声明有限域内的完整接受集，并对配置基线求全局最少字段反例，不只比较给定记录的决定摘要 |
 | [hutingyu-nuist/moonpolicyproof](https://github.com/hutingyu-nuist/moonpolicyproof) | IPv4 五元组有序首匹配策略、BDD 编译、双向差异与见证回放 | 语义差异目标有交集；kiln 不处理网络包、CIDR 或首匹配 ACL，而是算术业务条件、有限域变更与最少字段配置反例 |
 | [LF-ai-nb/caseweave](https://github.com/LF-ai-nb/caseweave) | 受约束覆盖数组、覆盖审计、用例修复与风险排序 | kiln 不声称新的组合覆盖工具，不生成覆盖数组；比较的是两版接受集，最近反例是精确 Hamming 最小化而非风险评分 |
 | [sgy1023-crt/MoonCassowary](https://github.com/sgy1023-crt/MoonCassowary) / [Freon793/moonopt](https://mooncakes.io/docs/Freon793/moonopt) | 增量连续线性布局 / LP-MIP 模型与证书 | 数学求解存在邻近；kiln 是有预算的小型有限域算术解释与语义回归，不宣称能替代这些高效求解内核 |
